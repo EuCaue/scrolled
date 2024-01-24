@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <link
+      rel="stylesheet"
+      href="./style.css"
+    />
+  </head>
+  <body>
+    <div id="svg-container">
+      <svg
+        viewBox="0 0 100 100"
+        id="circle-container"
+        style="filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.4))"
+      >
+        <circle
+          id="background-circle"
+          cx="50"
+          cy="50"
+          r="20"
+        ></circle>
+        <circle
+          id="progress-circle"
+          cx="50"
+          cy="50"
+          r="20"
+          fill="none"
+          stroke="#3498db"
+          stroke-width="4"
+        ></circle>
+      </svg>
+      <span id="percentage"></span>
+    </div>
+    <script src="./script.js"></script>
+  </body>
+</html>

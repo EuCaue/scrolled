@@ -1,0 +1,30 @@
+{
+  "description": "Show the current percentage scrolled of the current page",
+  "manifest_version": 2,
+  "name": "Scrolled",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "<all_urls>",
+    "tabs",
+    "webNavigation"
+  ],
+  "browser_action": {
+    "default_icon": "icons/icon.png",
+    "theme_icons": [
+      {
+        "light": "icons/icon-light.png",
+        "dark": "icons/icon.png",
+        "size": 32
+      }
+    ],
+    "default_title": "Scrolled Percentage",
+    "default_popup": "popup/index.html"
+  },
+  "background": {
+    "scripts": [
+      "background/main.js"
+    ],
+    "persistent": false
+  }
+}

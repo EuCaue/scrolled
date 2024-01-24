@@ -1,0 +1,49 @@
+#svg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 150px;
+  height: 150px;
+}
+
+#circle-container {
+  position: relative;
+}
+
+#background-circle {
+  fill: none;
+  stroke: #b2d8f1;
+  stroke-width: 10;
+  transition: stroke-dasharray 1s ease;
+}
+
+#progress-circle {
+  fill: none;
+  stroke: #3498db;
+  stroke-width: 10;
+  stroke-dasharray: 0, 1000;
+  transition: stroke-dasharray 1s ease;
+}
+
+#percentage {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+  font-weight: normal;
+  font-size: 1.2rem;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+}
