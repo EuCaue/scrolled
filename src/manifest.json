@@ -1,0 +1,43 @@
+{
+  "description": "Show the current percentage scrolled of the current page",
+  "manifest_version": 2,
+  "name": "Scrolled",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "<all_urls>",
+    "tabs",
+    "webNavigation",
+    "storage"
+  ],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "scrolled@eucaue",
+      "strict_min_version": "58.0"
+    }
+  },
+  "browser_action": {
+    "default_icon": "icons/icon.png",
+    "theme_icons": [
+      {
+        "light": "icons/icon-light.png",
+        "dark": "icons/icon.png",
+        "size": 32
+      }
+    ],
+    "default_title": "Scrolled Percentage",
+    "default_popup": "popup/index.html"
+  },
+  "background": {
+    "scripts": ["background_scripts/background.js"],
+    "persistent": false,
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_scripts/scrollListener.js"]
+    }
+  ]
+}
