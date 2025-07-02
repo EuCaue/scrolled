@@ -1,7 +1,5 @@
 import "./style.css";
 const percentage = window.document.querySelector("#percentage")!;
-console.log("GOOD");
-// update when open the popup
 
 async function updatePercentage() {
   const [tab]: browser.tabs.Tab[] = await browser.tabs.query({

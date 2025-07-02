@@ -82,10 +82,8 @@ window.addEventListener("scroll", function () {
 browser.runtime.onMessage.addListener((message) => {
   if (typeof message.popupOpen === "boolean") {
     isPopupOpen = message.popupOpen;
-    console.log("Popup state changed:", isPopupOpen);
   }
   if (message.type === "settings-update") {
-    console.log("Recebido do popup:", message.payload);
     createScrollIndicator();
   }
 });
