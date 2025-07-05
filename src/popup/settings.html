@@ -10,17 +10,32 @@
   >
     <h1 class="text-xl font-bold text-center">SETTINGS</h1>
 
-    <form id="settings-form" class="flex-1 w-full flex flex-col gap-4  overflow-scroll ">
+    <form
+      id="settings-form"
+      class="flex-1 w-full flex flex-col gap-4 overflow-scroll"
+    >
       <ul class="flex flex-col gap-4 w-full">
+        <li
+          class="flex items-center justify-between bg-surface px-4 py-2 rounded"
+        >
+          <label for="fill-color">FILL COLOR:</label>
+          <input
+            type="color"
+            id="fill-color"
+            name="fill-color"
+            required
+            class="h-6 w-10 cursor-pointer"
+          />
+        </li>
 
         <li
           class="flex items-center justify-between bg-surface px-4 py-2 rounded"
         >
-          <label for="color">COLOR:</label>
+          <label for="background-color">BACKGROUND COLOR:</label>
           <input
             type="color"
-            id="color"
-            name="color"
+            id="background-color"
+            name="background-color"
             required
             class="h-6 w-10 cursor-pointer"
           />
@@ -41,12 +56,12 @@
         </li>
       </ul>
     </form>
-      <span
-        class="mt-auto font-bold text-xl text-center text-default bg-highlight hidden rounded shadow-md hover:text-muted px-4 py-2"
-        id="success"
-      >
-        Settings saved!
-      </span>
+    <span
+      class="mt-auto font-bold text-xl text-center text-default bg-highlight hidden rounded shadow-md hover:text-muted px-4 py-2"
+      id="success"
+    >
+      Settings saved!
+    </span>
     <aside class="flex justify-between w-full mt-auto">
       <a href="index.html" class="bg-surface btn px-4 py-2 rounded">BACK</a>
       <button

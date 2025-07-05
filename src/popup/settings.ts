@@ -1,14 +1,24 @@
-type Options = {
-  height: number;
-  color: string;
-};
+import { DEFAULT_OPTIONS } from "../shared";
 
-const DEFAULT_OPTIONS: Options = {
-  height: 4,
-  color: "#5555f5",
-};
+const POPUP_TIMEOUT: number = 1850;
 
-function showError(el: HTMLElement, msg: string, ms: number = 1800): void {
+function toCamelCase(words: Array<string>): string {
+  return words
+    .map((w, i) => {
+      if (i === 0) {
+        return w;
+      }
+      const camelCase = `${w.substring(0, 1).toLocaleUpperCase()}${w.substring(1)}`;
+      return camelCase;
+    })
+    .join("");
+}
+
+function showError(
+  el: HTMLElement,
+  msg: string,
+  ms: number = POPUP_TIMEOUT,
+): void {
   const span = document.createElement("span");
   const cls: Array<string> = [
     "bg-red-400",
@@ -29,29 +39,24 @@ function showError(el: HTMLElement, msg: string, ms: number = 1800): void {
   span.innerText = msg;
   el.after(span);
 
-  const timeoutID = setTimeout(() => {
+  setTimeout(() => {
     span.remove();
   }, ms);
-  clearTimeout(timeoutID);
 }
 
-function saveOptions(options: Options) {
+function saveOptions(options: any) {
   browser.storage.sync.set(options);
 }
 
 async function restoreOptions() {
-  const options = await browser.storage.sync.get(["color", "height"]);
+  const options = await browser.storage.sync.get(Object.keys(DEFAULT_OPTIONS));
+  if (Object.keys(options).length < 1) {
+    saveOptions(DEFAULT_OPTIONS);
+  }
   const settingsInputs: NodeListOf<HTMLInputElement> =
     document.querySelectorAll("#settings-form input");
-  if (Object.keys(options).length < 1) {
-    console.log("no options saved");
-    settingsInputs.forEach((el) => {
-      const key = el.name;
-      options[key] = el.value;
-    });
-  }
   settingsInputs.forEach((el) => {
-    const key = el.name;
+    const key = toCamelCase(el.name.split("-")) as keyof typeof DEFAULT_OPTIONS;
     const value = options[key];
     el.value = value;
   });
@@ -60,11 +65,9 @@ async function restoreOptions() {
 function showSucessMessage() {
   const success = document.querySelector("#success");
   success?.classList.remove("hidden");
-  console.log(success?.classList);
-  const timeoutID = setTimeout(() => {
+  setTimeout(() => {
     success?.classList.add("hidden");
-  }, 1250);
-  clearTimeout(timeoutID);
+  }, POPUP_TIMEOUT);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -72,9 +75,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const form = document.querySelector("#settings-form") as HTMLFormElement;
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    let hasError = false;
     const formData: FormData = new FormData(form);
-    const color = formData.get("color") as string;
+    const fillColor = formData.get("fill-color") as string;
+    const backgroundColor = formData.get("background-color") as string;
     const height = Number(formData.get("height") ?? 0);
 
     //@ts-ignore
@@ -82,7 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
       showError(form, "Height should be between 1 and 40");
       return;
     }
-    saveOptions({ color, height });
+    saveOptions({ fillColor, backgroundColor, height });
     const [tab] = await browser.tabs.query({
       active: true,
       currentWindow: true,
@@ -90,7 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     browser.tabs.sendMessage(tab.id ?? 0, {
       type: "settings-update",
-      payload: {color, height},
+      payload: { fillColor, backgroundColor, height },
     });
     showSucessMessage();
   });
