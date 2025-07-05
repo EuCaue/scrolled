@@ -1,11 +1,15 @@
-//  TODO: background color should be something inverse at current bg of the current site
-//  TODO: let the user customize the height and some form of shape
-//  TODO: improve communicatoin between content and popup
+import { DEFAULT_OPTIONS } from "../shared";
+import { type Options } from "../shared";
 
 let isPopupOpen: boolean = false;
 
 async function createScrollIndicator(): Promise<void> {
-  const options = await browser.storage.sync.get(["color", "height"]);
+  const options = (await browser.storage.sync.get(
+    Object.keys(DEFAULT_OPTIONS),
+  )) as Options;
+  if (Object.keys(options).length < 1) {
+    browser.storage.sync.set(DEFAULT_OPTIONS);
+  }
   const style = document.createElement("style");
   document
     .querySelectorAll(".scroll-indicator")
@@ -19,7 +23,7 @@ async function createScrollIndicator(): Promise<void> {
     left: 0;
     height: ${options.height}px;
     width: 100%;
-    background-color: rgba(0, 0, 0,1);
+    background-color: ${options.backgroundColor};
     z-index: 9999;
     pointer-events: none;
   }
@@ -27,7 +31,7 @@ async function createScrollIndicator(): Promise<void> {
   .scroll-indicator-bar {
     height: 100%;
     width: 0%;
-    background-color: ${options.color};
+    background-color: ${options.fillColor};
     transition: width 0.2s ease;
   }
 `;
