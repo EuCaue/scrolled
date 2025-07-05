@@ -1,13 +1,16 @@
-let ports: Array<browser.runtime.Port> = [];
-
 browser.runtime.onConnect.addListener((port) => {
-  console.log(typeof port, port);
   if (port.name === "popup") {
-    ports.push(port);
     browser.tabs.query({}).then((tabs) => {
       for (const tab of tabs) {
         if (tab.id) {
-          browser.tabs.sendMessage(tab.id, { popupOpen: true });
+          browser.tabs
+            .sendMessage(tab.id, { popupOpen: true })
+            .catch((error) => {
+              if (error.message.includes("Receiving end does not exist")) {
+              } else {
+                console.error(`Error sending message to tab ${tab.id}:`, error);
+              }
+            });
         }
       }
     });
@@ -17,7 +20,17 @@ browser.runtime.onConnect.addListener((port) => {
         browser.tabs.query({}).then((tabs) => {
           for (const tab of tabs) {
             if (tab.id) {
-              browser.tabs.sendMessage(tab.id, { popupOpen: false });
+              browser.tabs
+                .sendMessage(tab.id, { popupOpen: false })
+                .catch((error) => {
+                  if (error.message.includes("Receiving end does not exist")) {
+                  } else {
+                    console.error(
+                      `Error sending message to tab ${tab.id}:`,
+                      error,
+                    );
+                  }
+                });
             }
           }
         });
@@ -25,11 +38,20 @@ browser.runtime.onConnect.addListener((port) => {
     });
 
     port.onDisconnect.addListener(() => {
-      ports = ports.filter((p) => p !== port);
       browser.tabs.query({}).then((tabs) => {
         for (const tab of tabs) {
           if (tab.id) {
-            browser.tabs.sendMessage(tab.id, { popupOpen: false });
+            browser.tabs
+              .sendMessage(tab.id, { popupOpen: false })
+              .catch((error) => {
+                if (error.message.includes("Receiving end does not exist")) {
+                } else {
+                  console.error(
+                    `Error sending message to tab ${tab.id}:`,
+                    error,
+                  );
+                }
+              });
           }
         }
       });
