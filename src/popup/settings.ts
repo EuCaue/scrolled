@@ -72,7 +72,13 @@ function showSucessMessage() {
 
 window.addEventListener("DOMContentLoaded", () => {
   restoreOptions();
-  const form = document.querySelector("#settings-form") as HTMLFormElement;
+  const form: HTMLFormElement = document.querySelector("#settings-form")!;
+  const closeBtn: HTMLButtonElement = document.querySelector("#close-btn")!;
+  closeBtn.addEventListener("click", async () => {
+    const windowID = (await browser.windows.getCurrent())?.id ?? 0;
+    browser.windows.remove(windowID);
+  });
+
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const formData: FormData = new FormData(form);
@@ -80,21 +86,14 @@ window.addEventListener("DOMContentLoaded", () => {
     const backgroundColor = formData.get("background-color") as string;
     const height = Number(formData.get("height") ?? 0);
 
-    //@ts-ignore
     if (height < 1 || height > 40) {
       showError(form, "Height should be between 1 and 40");
       return;
     }
     saveOptions({ fillColor, backgroundColor, height });
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-
-    browser.tabs.sendMessage(tab.id ?? 0, {
-      type: "settings-update",
-      payload: { fillColor, backgroundColor, height },
-    });
     showSucessMessage();
+    browser.runtime.sendMessage({
+      type: "settings-update",
+    });
   });
 });

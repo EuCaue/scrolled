@@ -1,5 +1,17 @@
 import "./style.css";
-const percentage = window.document.querySelector("#percentage")!;
+const percentage: HTMLSpanElement =
+  window.document.querySelector("#percentage")!;
+const settingsBtn: HTMLButtonElement =
+  window.document.querySelector("#settings-btn")!;
+
+settingsBtn.addEventListener("click", async () => {
+  await browser.windows.create({
+    url: "settings.html",
+    type: "popup",
+    width: 320,
+    height: 320,
+  });
+});
 
 async function updatePercentage() {
   const [tab]: browser.tabs.Tab[] = await browser.tabs.query({

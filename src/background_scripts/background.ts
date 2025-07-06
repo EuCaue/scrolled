@@ -1,3 +1,15 @@
+browser.runtime.onMessage.addListener((message) => {
+  if (message.type === "settings-update") {
+    browser.tabs.query({}).then((tabs) => {
+      for (const tab of tabs) {
+        if (!tab.id) continue;
+
+        browser.tabs.sendMessage(tab.id, message).catch(() => {});
+      }
+    });
+  }
+});
+
 browser.runtime.onConnect.addListener((port) => {
   if (port.name === "popup") {
     browser.tabs.query({}).then((tabs) => {
