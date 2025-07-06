@@ -10,8 +10,10 @@ async function updatePercentage() {
     tab.id ?? 0,
     {},
   );
-  const { percent } = response;
-  percentage.textContent = `${percent}%`;
+  if (response) {
+    const { percent } = response;
+    percentage.textContent = `${percent}%`;
+  }
 }
 
 browser.runtime.onMessage.addListener(function (response) {
@@ -21,12 +23,10 @@ browser.runtime.onMessage.addListener(function (response) {
   }
 });
 
-async function main() {
+(async () => {
   await updatePercentage();
-}
-
-main().then(() => console.log("running"));
-
+  console.log("running");
+})();
 
 const port = browser.runtime.connect({ name: "popup" });
 

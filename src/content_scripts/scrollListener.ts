@@ -66,12 +66,7 @@ function getScrollPercentage(): number {
   return Math.round(percentage);
 }
 
-window.addEventListener("focus", function () {
-  setScrollPercentage();
-});
-
-window.addEventListener("scroll", function () {
-  setScrollPercentage();
+function sendPopupStatus() {
   if (isPopupOpen) {
     browser.runtime.sendMessage(
       {
@@ -81,11 +76,21 @@ window.addEventListener("scroll", function () {
       {},
     );
   }
+}
+
+window.addEventListener("focus", function () {
+  setScrollPercentage();
+});
+
+window.addEventListener("scroll", function () {
+  setScrollPercentage();
+  sendPopupStatus();
 });
 
 browser.runtime.onMessage.addListener((message) => {
   if (typeof message.popupOpen === "boolean") {
     isPopupOpen = message.popupOpen;
+    sendPopupStatus()
   }
   if (message.type === "settings-update") {
     createScrollIndicator();
