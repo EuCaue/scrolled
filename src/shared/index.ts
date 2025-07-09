@@ -5,8 +5,7 @@ export type Options = {
 };
 
 export const DEFAULT_OPTIONS: Options = {
-  height: 4,
-  fillColor: "#5555f5",
+  height: 6,
+  fillColor: "#3584e4",
   backgroundColor: "#000000",
 };
-
