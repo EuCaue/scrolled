@@ -25,7 +25,7 @@ function showError(
     "font-bold",
     "text-md",
     "text-center",
-    "text-default",
+    "text-fg",
     "w-fit",
     "m-auto",
     "p-2",

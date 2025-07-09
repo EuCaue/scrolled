@@ -1,10 +1,7 @@
 @import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-
 @layer base {
-  @media (prefers-color-scheme: light) {
+  @variant not-dark {
     :root {
       --bg-default: hsl(0, 0%, 90%);
       --bg-surface: hsl(0, 0%, 95%);
@@ -14,7 +11,7 @@
     }
   }
 
-  @media (prefers-color-scheme: dark) {
+  @variant dark {
     :root {
       --bg-default: hsl(0, 0%, 10%);
       --bg-surface: hsl(0, 0%, 15%);
@@ -38,32 +35,17 @@
   }
 }
 
-@layer utilities {
-  .bg-default {
-    background-color: var(--bg-default);
-  }
+@theme inline {
+  --color-bg: var(--bg-default);
+  --color-surface: var(--bg-surface);
+  --color-highlight: var(--bg-highlight);
 
-  .bg-surface {
-    background-color: var(--bg-surface);
-  }
-
-  .bg-highlight {
-    background-color: var(--bg-highlight);
-  }
-
-  .text-default {
-    color: var(--text-default);
-  }
-
-  .text-muted {
-    color: var(--text-muted);
-  }
+  --color-fg: var(--text-default);
+  --color-muted: var(--text-muted);
 }
 
 @layer components {
   .btn {
-    @apply p-4 shadow rounded-2xl hover:scale-105 transition-all duration-200 ease-linear;
+    @apply bg-surface px-4 py-2 shadow rounded hover:scale-105 transition-all duration-200 ease-linear hover:bg-highlight;
   }
 }
-
-@tailwind utilities;
