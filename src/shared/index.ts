@@ -1,3 +1,5 @@
+const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
 export type Options = {
   height: number;
   fillColor: string;
@@ -7,5 +9,5 @@ export type Options = {
 export const DEFAULT_OPTIONS: Options = {
   height: 6,
   fillColor: "#3584e4",
-  backgroundColor: "#000000",
+  backgroundColor: isDarkMode ? "#000000" : "#ffffff",
 };
