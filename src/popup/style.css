@@ -33,6 +33,21 @@
   label {
     cursor: text;
   }
+
+  input {
+    &:is(:active, :focus, :focus-within) {
+      outline: none;
+    }
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
 }
 
 @theme inline {
