@@ -49,7 +49,7 @@ git clone https://github.com/EuCaue/scrolled.git
 
 ## 🚀 Todo
 
-- [ ] Customizable scroll bar colors
+- [x] Customizable scroll bar colors
 - [ ] Enable/disable per site
 - [ ] Dark mode compatibility
 
