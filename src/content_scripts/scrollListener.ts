@@ -78,11 +78,11 @@ function sendPopupStatus() {
   }
 }
 
-window.addEventListener("focus", function () {
+window.addEventListener("focus", () => {
   setScrollPercentage();
 });
 
-window.addEventListener("scroll", function () {
+window.addEventListener("scroll", () => {
   setScrollPercentage();
   sendPopupStatus();
 });
@@ -90,7 +90,7 @@ window.addEventListener("scroll", function () {
 browser.runtime.onMessage.addListener((message) => {
   if (typeof message.popupOpen === "boolean") {
     isPopupOpen = message.popupOpen;
-    sendPopupStatus()
+    sendPopupStatus();
   }
   if (message.type === "settings-update") {
     createScrollIndicator();
