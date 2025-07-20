@@ -63,6 +63,8 @@ async function handleBlockUrls() {
 
   const { host } = new URL(tab.url ?? "");
   disableBtn.textContent = host;
+  disableBtn.classList.toggle("hidden", !host);
+
   const { blockedUrls } = (await browser.storage.local.get({
     blockedUrls: new Set(),
   })) as {
