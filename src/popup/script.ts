@@ -54,26 +54,26 @@ async function toggleUrlBlocked({
 }
 
 async function handleBlockUrls() {
-  const disableBtn = document.querySelector(
-    "#disable-btn",
+  const blockUrlBtn = document.querySelector(
+    "#block-url-btn",
   ) as HTMLButtonElement | null;
-  if (!disableBtn) return;
+  if (!blockUrlBtn) return;
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab.id) return;
 
   const { host } = new URL(tab.url ?? "");
-  disableBtn.textContent = host;
-  disableBtn.classList.toggle("hidden", !host);
+  blockUrlBtn.textContent = host;
+  blockUrlBtn.classList.toggle("hidden", !host);
 
   const { blockedUrls } = (await browser.storage.local.get({
     blockedUrls: new Set(),
   })) as {
     blockedUrls: Set<string>;
   };
-  disableBtn.classList.toggle("bg-highlight", blockedUrls.has(host));
-  disableBtn?.addEventListener("click", (ev) => {
+  blockUrlBtn.classList.toggle("bg-highlight", blockedUrls.has(host));
+  blockUrlBtn?.addEventListener("click", (ev) => {
     const url = (ev.currentTarget as HTMLButtonElement).textContent ?? "";
-    toggleUrlBlocked({ blockedUrls, el: disableBtn, url });
+    toggleUrlBlocked({ blockedUrls, el: blockUrlBtn, url });
   });
 }
 
@@ -98,5 +98,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   await updatePercentage(percentage);
-  console.log("running");
+  console.log("Popup Loaded.");
 });
