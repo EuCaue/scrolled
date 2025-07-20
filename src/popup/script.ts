@@ -34,7 +34,7 @@ async function updateBlockedUrls(blockedUrls: Set<string>) {
   await browser.storage.local.set({ blockedUrls });
 }
 
-async function handleUrl({
+async function toggleUrlBlocked({
   blockedUrls,
   url,
   el,
@@ -43,7 +43,7 @@ async function handleUrl({
   url: string;
   el: HTMLElement;
 }) {
-  const isBlocked = blockedUrls.has(url);
+  const isBlocked: boolean = blockedUrls.has(url);
   el.classList.toggle("bg-highlight", !isBlocked);
   if (isBlocked) {
     blockedUrls.delete(url);
@@ -53,13 +53,14 @@ async function handleUrl({
   await updateBlockedUrls(blockedUrls);
 }
 
-async function handleToggleSites() {
+async function handleBlockUrls() {
   const disableBtn = document.querySelector(
     "#disable-btn",
   ) as HTMLButtonElement | null;
   if (!disableBtn) return;
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab.id) return;
+
   const { host } = new URL(tab.url ?? "");
   disableBtn.textContent = host;
   const { blockedUrls } = (await browser.storage.local.get({
@@ -67,15 +68,10 @@ async function handleToggleSites() {
   })) as {
     blockedUrls: Set<string>;
   };
-
-  const isUrlBlocked = blockedUrls.has(host);
-  if (isUrlBlocked) {
-    disableBtn.classList.toggle("bg-highlight", isUrlBlocked);
-  }
-
+  disableBtn.classList.toggle("bg-highlight", blockedUrls.has(host));
   disableBtn?.addEventListener("click", (ev) => {
     const url = (ev.currentTarget as HTMLButtonElement).textContent ?? "";
-    handleUrl({ blockedUrls, el: disableBtn, url });
+    toggleUrlBlocked({ blockedUrls, el: disableBtn, url });
   });
 }
 
@@ -88,7 +84,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   ) as HTMLButtonElement | null;
 
   if (!percentage || !settingsBtn) return;
-  handleToggleSites();
+  handleBlockUrls();
 
   settingsBtn.addEventListener("click", async () => {
     await browser.windows.create({
