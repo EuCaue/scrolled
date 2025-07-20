@@ -11,3 +11,4 @@ export const DEFAULT_OPTIONS: Options = {
   fillColor: "#3584e4",
   backgroundColor: isDarkMode ? "#000000" : "#ffffff",
 };
+
