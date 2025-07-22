@@ -36,28 +36,18 @@ async function updateBlockedUrls(blockedUrls: Set<string>) {
   await browser.storage.local.set({ blockedUrls });
 }
 
-async function toggleUrlBlocked({
-  blockedUrls,
-  url,
-  el,
-}: {
-  blockedUrls: Set<string>;
-  url: string;
-  el: HTMLElement;
-}) {
-  const isBlocked: boolean = blockedUrls.has(url);
-  el.classList.toggle("bg-highlight", !isBlocked);
-  el.classList.toggle("text-muted", !isBlocked);
-  el.classList.toggle("font-light", !isBlocked);
-  if (isBlocked) {
-    blockedUrls.delete(url);
-  } else {
-    blockedUrls.add(url);
-  }
-  await updateBlockedUrls(blockedUrls);
-}
-
 async function handleBlockUrls() {
+  const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
+    if (!blockUrlBtn) return;
+    const blockedClasses: Array<string> = [
+      "bg-highlight",
+      "text-muted",
+      "font-light",
+    ];
+    blockedClasses.forEach((className) => {
+      blockUrlBtn.classList.toggle(className, isBlocked);
+    });
+  };
   const blockUrlBtn = document.querySelector(
     "#block-url-btn",
   ) as HTMLButtonElement | null;
@@ -68,6 +58,7 @@ async function handleBlockUrls() {
   const { host } = new URL(tab.url ?? "");
   blockUrlBtn.children[1].textContent = host;
   blockUrlBtn.classList.toggle("hidden", !host);
+  blockUrlBtn.ariaHidden = `${!host}`;
 
   const { blockedUrls } = (await browser.storage.local.get({
     blockedUrls: new Set(),
@@ -75,14 +66,19 @@ async function handleBlockUrls() {
     blockedUrls: Set<string>;
   };
   const isUrlBlocked = blockedUrls.has(host);
-  blockUrlBtn.classList.toggle("bg-highlight", isUrlBlocked);
-  blockUrlBtn.classList.toggle("text-muted", isUrlBlocked);
-  blockUrlBtn.classList.toggle("font-light", isUrlBlocked);
+  toggleBlockedClasses({ isBlocked: isUrlBlocked });
   blockUrlBtn?.addEventListener("click", (ev) => {
     const url =
       (ev.currentTarget as HTMLButtonElement).querySelector("#url")
         ?.textContent ?? "";
-    toggleUrlBlocked({ blockedUrls, el: blockUrlBtn, url });
+    const isBlocked: boolean = blockedUrls.has(url);
+    toggleBlockedClasses({ isBlocked: !isBlocked });
+    if (isBlocked) {
+      blockedUrls.delete(url);
+    } else {
+      blockedUrls.add(url);
+    }
+    updateBlockedUrls(blockedUrls);
   });
 }
 
