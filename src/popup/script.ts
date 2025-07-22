@@ -1,6 +1,28 @@
 import "./style.css";
 //  TODO: change storage.local to sync
 
+function handlePopupMessaging() {
+  const port = browser.runtime.connect({ name: "popup" });
+
+  port.postMessage({ type: "popup-opened" });
+
+  window.addEventListener("unload", () => {
+    port.postMessage({ type: "popup-closed" });
+  });
+
+  browser.runtime.onMessage.addListener((response) => {
+    const { percent, isScrollEvent } = response;
+    if (isScrollEvent === true) {
+      const percentage = document.querySelector(
+        "#percentage",
+      ) as HTMLSpanElement | null;
+      if (percentage) {
+        percentage.textContent = `${percent}%`;
+      }
+    }
+  });
+}
+
 async function updatePercentage(percentage: HTMLSpanElement) {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab.id) return;
@@ -9,26 +31,6 @@ async function updatePercentage(percentage: HTMLSpanElement) {
     percentage.textContent = `${response.percent}%`;
   }
 }
-
-const port = browser.runtime.connect({ name: "popup" });
-
-port.postMessage({ type: "popup-opened" });
-
-window.addEventListener("unload", () => {
-  port.postMessage({ type: "popup-closed" });
-});
-
-browser.runtime.onMessage.addListener((response) => {
-  const { percent, isScrollEvent } = response;
-  if (isScrollEvent === true) {
-    const percentage = document.querySelector(
-      "#percentage",
-    ) as HTMLSpanElement | null;
-    if (percentage) {
-      percentage.textContent = `${percent}%`;
-    }
-  }
-});
 
 async function updateBlockedUrls(blockedUrls: Set<string>) {
   await browser.storage.local.set({ blockedUrls });
@@ -45,6 +47,8 @@ async function toggleUrlBlocked({
 }) {
   const isBlocked: boolean = blockedUrls.has(url);
   el.classList.toggle("bg-highlight", !isBlocked);
+  el.classList.toggle("text-muted", !isBlocked);
+  el.classList.toggle("font-light", !isBlocked);
   if (isBlocked) {
     blockedUrls.delete(url);
   } else {
@@ -62,7 +66,7 @@ async function handleBlockUrls() {
   if (!tab.id) return;
 
   const { host } = new URL(tab.url ?? "");
-  blockUrlBtn.textContent = host;
+  blockUrlBtn.children[1].textContent = host;
   blockUrlBtn.classList.toggle("hidden", !host);
 
   const { blockedUrls } = (await browser.storage.local.get({
@@ -70,13 +74,19 @@ async function handleBlockUrls() {
   })) as {
     blockedUrls: Set<string>;
   };
-  blockUrlBtn.classList.toggle("bg-highlight", blockedUrls.has(host));
+  const isUrlBlocked = blockedUrls.has(host);
+  blockUrlBtn.classList.toggle("bg-highlight", isUrlBlocked);
+  blockUrlBtn.classList.toggle("text-muted", isUrlBlocked);
+  blockUrlBtn.classList.toggle("font-light", isUrlBlocked);
   blockUrlBtn?.addEventListener("click", (ev) => {
-    const url = (ev.currentTarget as HTMLButtonElement).textContent ?? "";
+    const url =
+      (ev.currentTarget as HTMLButtonElement).querySelector("#url")
+        ?.textContent ?? "";
     toggleUrlBlocked({ blockedUrls, el: blockUrlBtn, url });
   });
 }
 
+handlePopupMessaging();
 window.addEventListener("DOMContentLoaded", async () => {
   const percentage = document.querySelector(
     "#percentage",

@@ -13,10 +13,30 @@
       <p>The page has been scrolled:</p>
       <span class="font-bold text-lg" id="percentage"> 0% </span>
     </main>
-    <aside class="max-w-full flex items-center justify-between flex-col gap-4 ">
-      <button type="button" id="settings-btn" class="btn">SETTINGS</button>
-      <button type="button" id="block-url-btn" class="btn hidden">
+    <aside class="max-w-full flex items-center justify-between flex-col gap-4">
+      <button
+        type="button"
+        id="block-url-btn"
+        class="btn flex items-center gap-2 px-3 py-1.5 rounded-md"
+        title="Toggle indicator on current website."
+      >
+        <svg
+          class="w-5 h-5 font-bold"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          id="unblocked-icon"
+        >
+          <path
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 2v10m5.656-5.656a9 9 0 11-11.313 0"
+          />
+        </svg>
+        <span id="url"></span>
       </button>
+      <button type="button" id="settings-btn" class="btn">SETTINGS</button>
     </aside>
     <script src="./script.js"></script>
   </body>
