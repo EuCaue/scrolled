@@ -33,7 +33,7 @@ async function updatePercentage(percentage: HTMLSpanElement) {
 }
 
 async function updateBlockedUrls(blockedUrls: Set<string>) {
-  await browser.storage.local.set({ blockedUrls });
+  await browser.storage.local.set({ blockedUrls: Array.from(blockedUrls) });
 }
 
 async function handleBlockUrls() {
@@ -60,11 +60,10 @@ async function handleBlockUrls() {
   blockUrlBtn.classList.toggle("hidden", !host);
   blockUrlBtn.ariaHidden = `${!host}`;
 
-  const { blockedUrls } = (await browser.storage.local.get({
-    blockedUrls: new Set(),
-  })) as {
-    blockedUrls: Set<string>;
-  };
+  const { blockedUrls: rawUrls } = await browser.storage.local.get({
+    blockedUrls: [],
+  });
+  const blockedUrls = new Set<string>(rawUrls);
   const isUrlBlocked = blockedUrls.has(host);
   toggleBlockedClasses({ isBlocked: isUrlBlocked });
   blockUrlBtn?.addEventListener("click", (ev) => {
