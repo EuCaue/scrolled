@@ -21,9 +21,19 @@
     "default_icon": "icons/icon.png",
     "theme_icons": [
       {
-        "light": "icons/icon-light.png",
-        "dark": "icons/icon.png",
+        "dark": "./icons/icon-16-light.png",
+        "light": "./icons/icon-16-dark.png",
+        "size": 16
+      },
+      {
+        "dark": "./icons/icon-32-light.png",
+        "light": "./icons/icon-32-dark.png",
         "size": 32
+      },
+      {
+        "dark": "./icons/icon-128-light.png",
+        "light": "./icons/icon-128-dark.png",
+        "size": 128
       }
     ],
     "default_title": "Scrolled Percentage",
