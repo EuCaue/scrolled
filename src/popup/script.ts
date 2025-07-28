@@ -1,26 +1,26 @@
 import "./style.css";
 //  TODO: change storage.local to sync
 
-function handlePopupMessaging() {
-  const port = browser.runtime.connect({ name: "popup" });
-
-  port.postMessage({ type: "popup-opened" });
-
-  window.addEventListener("unload", () => {
-    port.postMessage({ type: "popup-closed" });
+async function renderScrollPercentage() {
+  const { blockedUrls: rawUrls } = await browser.storage.local.get({
+    blockedUrls: [],
   });
-
-  browser.runtime.onMessage.addListener((response) => {
-    const { percent, isScrollEvent } = response;
-    if (isScrollEvent === true) {
-      const percentage = document.querySelector(
-        "#percentage",
-      ) as HTMLSpanElement | null;
-      if (percentage) {
-        percentage.textContent = `${percent}%`;
-      }
-    }
+  const [tab] = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
   });
+  const percentage = document.querySelector(
+    "#percentage",
+  ) as HTMLSpanElement | null;
+  if (!percentage) return;
+  const { host } = new URL(tab.url ?? "");
+  const blockedUrls = new Set(rawUrls);
+  console.log(blockedUrls);
+  if (blockedUrls.has(host)) {
+    percentage.textContent = "N/A";
+  } else {
+    updatePercentage(percentage);
+  }
 }
 
 async function updatePercentage(percentage: HTMLSpanElement) {
@@ -30,6 +30,36 @@ async function updatePercentage(percentage: HTMLSpanElement) {
   if (response?.percent !== undefined) {
     percentage.textContent = `${response.percent}%`;
   }
+}
+
+function handlePopupMessaging() {
+  const port = browser.runtime.connect({ name: "popup" });
+
+  port.postMessage({ type: "popup-opened" });
+
+  window.addEventListener("unload", () => {
+    port.postMessage({ type: "popup-closed" });
+  });
+  browser.storage.onChanged.addListener(async (changes, areaName) => {
+    if (areaName === "local" && changes.blockedUrls) {
+      renderScrollPercentage();
+    }
+  });
+
+  browser.runtime.onMessage.addListener((response) => {
+    const { percent, isScrollEvent, type } = response;
+    if (isScrollEvent === true) {
+      const percentage = document.querySelector(
+        "#percentage",
+      ) as HTMLSpanElement | null;
+      if (percentage) {
+        percentage.textContent = `${percent}%`;
+      }
+    }
+    if (type === "settings-update") {
+      renderScrollPercentage();
+    }
+  });
 }
 
 async function updateBlockedUrls(blockedUrls: Set<string>) {
@@ -102,6 +132,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  await updatePercentage(percentage);
+  await renderScrollPercentage();
   console.log("Popup Loaded.");
 });

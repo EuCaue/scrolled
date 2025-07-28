@@ -82,6 +82,7 @@ async function applyCurrentState(): Promise<void> {
   if (blockedUrls.has(window.location.hostname)) {
     disableIndicator();
   } else {
+    sendPopupStatus()
     enableIndicator();
   }
 }
