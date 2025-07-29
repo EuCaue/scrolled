@@ -1,10 +1,10 @@
-<center>
+<div align="center">
 
-![](./src/icons/icon-128-dark.png)
+<img src="./src/icons/icon-128-dark.png"/>
 
 # Scrolled
 
-</center>
+</div>
 
 **Scrolled** is a lightweight Firefox extension that adds a subtle scroll indicator to show how much of a page you've read. Perfect for readers, researchers, or anyone who wants better visual feedback while browsing long content.
 
