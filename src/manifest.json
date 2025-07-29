@@ -13,12 +13,11 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "scrolled@eucaue",
-      "strict_min_version": "58.0"
+      "id": "scrolled@eucaue"
     }
   },
   "action": {
-    "default_icon": "icons/icon.png",
+    "default_icon": "icons/icon-128-light.png",
     "theme_icons": [
       {
         "dark": "./icons/icon-16-light.png",
@@ -36,7 +35,7 @@
         "size": 128
       }
     ],
-    "default_title": "Scrolled Percentage",
+    "default_title": "Scrolled",
     "default_popup": "popup/index.html"
   },
   "background": {
