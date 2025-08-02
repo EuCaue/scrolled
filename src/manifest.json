@@ -1,5 +1,5 @@
 {
-  "description": "Show the current percentage scrolled of the current page",
+  "description": "Displays the current scroll percentage of the active page.",
   "manifest_version": 3,
   "name": "Scrolled",
   "version": "1.0",
@@ -13,7 +13,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "scrolled@eucaue"
+      "id": "scrolled-addon@eucaue"
     }
   },
   "action": {
