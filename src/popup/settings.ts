@@ -80,6 +80,8 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     blockedUrls.delete(blockedUrlToRemove);
     return blockedUrlToRemove;
   };
+  const icon = await fetch(browser.runtime.getURL("/icons/trash.svg"));
+  const trashIcon = await icon.text();
   blockedUrls.forEach((blockedUrl) => {
     const li = document.createElement<"li">("li");
     li.className =
@@ -107,11 +109,7 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     button.type = "button";
     button.className = "btn font-bold bg-highlight p-1 m-1.5";
     button.id = `remove-btn-${blockedUrl}`;
-    fetch(browser.runtime.getURL("/icons/trash.svg"))
-      .then((res) => res.text())
-      .then((svg) => {
-        button?.insertAdjacentHTML("afterbegin", svg);
-      });
+    button?.insertAdjacentHTML("afterbegin", trashIcon);
 
     button.addEventListener("click", async () => {
       li.remove();
