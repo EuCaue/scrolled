@@ -20,7 +20,7 @@
     "web-ext": "^8.9.0"
   },
   "scripts": {
-    "build:prod": "rollup -c && npx web-ext build --source dist --artifacts-dir ./ --overwrite-dest",
+    "build:prod": "rollup -c && npm run copy:once && npx web-ext build --source-dir dist --artifacts-dir ./ --overwrite-dest",
     "watch": "rollup -c --watch",
     "copy:watch": "chokidar \"src/**/*.{json,html,png}\" -c \"bun run copy:once\"",
     "copy:once": "cpx \"src/**/*.{json,html,png}\" dist",

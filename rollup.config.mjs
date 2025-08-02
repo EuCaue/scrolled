@@ -19,7 +19,7 @@ export default [
         tsconfig: "./tsconfig.json",
       }),
     ],
-    treeshake: true, 
+    treeshake: true,
   },
 
   {
@@ -30,30 +30,42 @@ export default [
       entryFileNames: "background.js",
       sourcemap: false,
     },
+    plugins: [resolve(), typescript({ tsconfig: "./tsconfig.json" })],
+    treeshake: true,
+  },
+
+  {
+    input: "src/popup/script.ts",
+    output: {
+      dir: "dist/popup",
+      format: "esm",
+      entryFileNames: "script.js",
+      sourcemap: false,
+    },
     plugins: [
       resolve(),
-      typescript({
-        tsconfig: "./tsconfig.json",
+      typescript({ tsconfig: "./tsconfig.json" }),
+      postcss({
+        extract: "style.css",
+        plugins: [tailwindcss(tailwindConfig)],
+        minimize: false,
+        sourceMap: false,
       }),
     ],
     treeshake: true,
   },
 
   {
-    input: {
-      script: "src/popup/script.ts", 
-      settings: "src/popup/settings.ts", 
-    },
+    input: "src/popup/settings.ts",
     output: {
-      dir: "dist/popup", 
+      dir: "dist/popup",
       format: "esm",
+      entryFileNames: "settings.js",
       sourcemap: false,
     },
     plugins: [
       resolve(),
-      typescript({
-        tsconfig: "./tsconfig.json",
-      }),
+      typescript({ tsconfig: "./tsconfig.json" }),
       postcss({
         extract: "style.css",
         plugins: [tailwindcss(tailwindConfig)],
