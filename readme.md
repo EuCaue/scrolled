@@ -1,8 +1,10 @@
 <div align="center">
 
-<img src="./src/icons/icon-128-dark.png"/>
+<img src="./src/icons/icon-128-dark.png" />
 
 # Scrolled
+
+[![Get it on Firefox Add-ons](https://img.shields.io/amo/v/scrolled?label=Install%20on%20Firefox&style=for-the-badge&logo=firefox-browser)](https://addons.mozilla.org/en-US/firefox/addon/scrolled/)
 
 </div>
 
@@ -20,6 +22,16 @@
 ---
 
 ## 📦 Installation
+
+### 🦊 Install from Firefox Add-ons Store (Recommended)
+
+You can install Scrolled directly from the official Mozilla Add-ons store:
+
+➡️ [Install Scrolled on Firefox](https://addons.mozilla.org/en-US/firefox/addon/scrolled/)
+
+---
+
+### 🧑‍💻 Manual Installation (Development)
 
 > Requires [Node.js](https://nodejs.org) and [npm](https://www.npmjs.com)
 
@@ -44,7 +56,7 @@ npm run build:prod
 
 This will generate a `.zip` file in the root directory, ready for installation in Firefox.
 
-4. Load it in Firefox:
+4. Load it in Firefox manually:
    - Go to `about:debugging`
    - Click **"This Firefox"** → **"Load Temporary Add-on..."**
    - Select the `manifest.json` file inside the `dist` folder
