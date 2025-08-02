@@ -1,10 +1,8 @@
+import { getBlockedUrls, updateBlockedUrls } from "../shared";
 import "./style.css";
 //  TODO: change storage.local to sync
 
 async function renderScrollPercentage() {
-  const { blockedUrls: rawUrls } = await browser.storage.local.get({
-    blockedUrls: [],
-  });
   const [tab] = await browser.tabs.query({
     active: true,
     currentWindow: true,
@@ -14,8 +12,7 @@ async function renderScrollPercentage() {
   ) as HTMLSpanElement | null;
   if (!percentage) return;
   const { host } = new URL(tab.url ?? "");
-  const blockedUrls = new Set(rawUrls);
-  console.log(blockedUrls);
+  const blockedUrls = await getBlockedUrls();
   if (blockedUrls.has(host)) {
     percentage.textContent = "N/A";
   } else {
@@ -62,10 +59,6 @@ function handlePopupMessaging() {
   });
 }
 
-async function updateBlockedUrls(blockedUrls: Set<string>) {
-  await browser.storage.local.set({ blockedUrls: Array.from(blockedUrls) });
-}
-
 async function handleBlockUrls() {
   const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
     if (!blockUrlBtn) return;
@@ -90,10 +83,7 @@ async function handleBlockUrls() {
   blockUrlBtn.classList.toggle("hidden", !host);
   blockUrlBtn.ariaHidden = `${!host}`;
 
-  const { blockedUrls: rawUrls } = await browser.storage.local.get({
-    blockedUrls: [],
-  });
-  const blockedUrls = new Set<string>(rawUrls);
+  const blockedUrls = await getBlockedUrls()
   const isUrlBlocked = blockedUrls.has(host);
   toggleBlockedClasses({ isBlocked: isUrlBlocked });
   blockUrlBtn?.addEventListener("click", (ev) => {
@@ -133,5 +123,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   await renderScrollPercentage();
-  console.log("Popup Loaded.");
+  console.debug("Popup Loaded.");
 });

@@ -1,4 +1,4 @@
-import { DEFAULT_OPTIONS } from "../shared";
+import { DEFAULT_OPTIONS, getBlockedUrls } from "../shared";
 import { type Options } from "../shared";
 
 let isPopupOpen: boolean = false;
@@ -74,10 +74,7 @@ function scrollHandler(): void {
 }
 
 async function applyCurrentState(): Promise<void> {
-  const { blockedUrls: rawUrls } = await browser.storage.local.get({
-    blockedUrls: [],
-  });
-  const blockedUrls = new Set(rawUrls);
+  const blockedUrls = await getBlockedUrls()
 
   if (blockedUrls.has(window.location.hostname)) {
     disableIndicator();
