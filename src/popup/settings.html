@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body
-    class="bg-default text-fg w-80 h-80 p-4 rounded shadow-lg flex flex-col gap-4"
+    class="bg-default text-fg min-w-80 min-h-80 md:min-h-auto md:min-w-auto max-h-2/4 max-w-2/4 p-4 rounded shadow-lg flex flex-col gap-4 self-center m-auto"
   >
     <h1 class="text-xl font-bold text-center">SETTINGS</h1>
 
@@ -55,6 +55,11 @@
           />
         </li>
       </ul>
+      <h2 class="text-lg font-bold leading-loose">Blocked URls</h2>
+      <ul
+        id="blocked-urls-list"
+        class="flex flex-col items-center justify-between bg-surface p-2 rounded gap-3"
+      ></ul>
     </form>
     <span
       class="mt-auto font-bold text-xl text-center text-fg bg-highlight hidden rounded shadow-md hover:text-muted px-4 py-2"
@@ -63,14 +68,9 @@
       Settings saved!
     </span>
     <aside class="flex justify-between w-full mt-auto">
-      <button type="button" id="close-btn" class="btn">CLOSE</a>
-      <button
-        type="submit"
-        class="btn"
-        form="settings-form"
-      >
-        SAVE
-      </button>
+      <button type="button" id="close-btn" class="btn">CLOSE</button>
+      <!--  TODO: disable if the form is untouched  -->
+      <button type="submit" class="btn" form="settings-form">SAVE</button>
     </aside>
     <script src="./settings.js"></script>
   </body>
