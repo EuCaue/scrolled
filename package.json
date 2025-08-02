@@ -22,8 +22,8 @@
   "scripts": {
     "build:prod": "rollup -c && npm run copy:once && npx web-ext build --source-dir dist --artifacts-dir ./ --overwrite-dest",
     "watch": "rollup -c --watch",
-    "copy:watch": "chokidar \"src/**/*.{json,html,png}\" -c \"bun run copy:once\"",
-    "copy:once": "cpx \"src/**/*.{json,html,png}\" dist",
+    "copy:watch": "chokidar \"src/**/*.{json,html,png,svg}\" -c \"bun run copy:once\"",
+    "copy:once": "cpx \"src/**/*.{json,html,png,svg}\" dist",
     "dev": "concurrently \"bun:watch\" \"bun:copy:once\" \"bun:copy:watch\" \"bun:web\"",
     "web": "npx web-ext run --reload -s dist"
   }

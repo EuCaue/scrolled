@@ -105,10 +105,13 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     });
     const button = document.createElement<"button">("button");
     button.type = "button";
-    button.className = "font-bold bg-highlight p-1 m-1.5";
+    button.className = "btn font-bold bg-highlight p-1 m-1.5";
     button.id = `remove-btn-${blockedUrl}`;
-    //  TODO: add icon
-    button.textContent = "D";
+    fetch(browser.runtime.getURL("/icons/trash.svg"))
+      .then((res) => res.text())
+      .then((svg) => {
+        button?.insertAdjacentHTML("afterbegin", svg);
+      });
 
     button.addEventListener("click", async () => {
       li.remove();
