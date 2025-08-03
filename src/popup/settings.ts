@@ -95,16 +95,17 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     input.name = `url-${blockedUrl}`;
     input.value = blockedUrl;
     input.className = "p-2 text-sm w-full";
-    input.addEventListener("blur", () => {
+
+    input.addEventListener("change", () => {
+      const newUrl = input.value.trim();
+      if (!newUrl) return;
+
       if (blockedUrls.has(blockedUrl)) {
         blockedUrls.delete(blockedUrl);
       }
-      const newBlockedUrlValue = input.value;
-      blockedUrls.add(newBlockedUrlValue);
-      input.id = `url-${newBlockedUrlValue}`;
-      input.name = `url-${newBlockedUrlValue}`;
-      input.value = newBlockedUrlValue;
+      blockedUrls.add(newUrl);
     });
+
     const button = document.createElement<"button">("button");
     button.type = "button";
     button.className = "btn font-bold bg-highlight p-1 m-1.5";
@@ -131,11 +132,6 @@ function showSucessMessage() {
   }, POPUP_TIMEOUT);
 }
 
-const isValidHost = (str: string) =>
-  /^(localhost|\d{1,3}(\.\d{1,3}){3}|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})(:\d{1,5})?$/.test(
-    str,
-  );
-
 window.addEventListener("DOMContentLoaded", async () => {
   const blockedUrls = await getBlockedUrls();
   await restoreOptions();
@@ -159,13 +155,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     const backgroundColor = formData.get("background-color") as string;
     const height = Number(formData.get("height") ?? 0);
     const errors: Array<string> = [];
+    await updateBlockedUrls(blockedUrls);
     if (height < 1 || height > 40) {
       errors.push("Height should be between 1 and 40");
-    }
-    for (const [k, v] of formData.entries()) {
-      if (k.startsWith("url-") && !isValidHost(v as string)) {
-        errors.push(`(${v}): is not a valid url.`);
-      }
     }
     if (errors.length >= 1) {
       errors.forEach((error) => {
@@ -173,7 +165,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       });
       return;
     }
-    await updateBlockedUrls(blockedUrls);
     saveOptions({ fillColor, backgroundColor, height });
     showSucessMessage();
     browser.runtime.sendMessage({
