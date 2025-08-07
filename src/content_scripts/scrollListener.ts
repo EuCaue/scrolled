@@ -12,7 +12,7 @@ async function enableIndicator(): Promise<void> {
     browser.storage.sync.set(DEFAULT_OPTIONS);
   }
   //  TODO: improve how to reload the scroll indicator
-  disableIndicator()
+  disableIndicator();
   const style = document.createElement("style");
   style.className = "scroll-indicator-style";
   style.textContent = `
@@ -29,10 +29,9 @@ async function enableIndicator(): Promise<void> {
   wrapper.appendChild(bar);
   document.body.appendChild(wrapper);
 
-  setScrollPercentage();
-
   window.addEventListener("focus", setScrollPercentage);
   window.addEventListener("scroll", scrollHandler);
+  scrollHandler();
 }
 
 function disableIndicator(): void {
@@ -55,7 +54,7 @@ function getScrollPercentage(): number {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const totalHeight =
     document.documentElement.scrollHeight - window.innerHeight;
-  if (totalHeight <= 0) return 100;
+  if (totalHeight <= 0) return 0;
   return Math.round((scrollTop / totalHeight) * 100);
 }
 
@@ -63,7 +62,7 @@ function sendPopupStatus(): void {
   if (isPopupOpen) {
     browser.runtime.sendMessage({
       percent: getScrollPercentage(),
-      isScrollEvent: true,
+      type: "scroll-event",
     });
   }
 }
@@ -74,20 +73,29 @@ function scrollHandler(): void {
 }
 
 async function applyCurrentState(): Promise<void> {
-  const blockedUrls = await getBlockedUrls()
+  const blockedUrls = await getBlockedUrls();
 
   if (blockedUrls.has(window.location.hostname)) {
     disableIndicator();
   } else {
-    sendPopupStatus()
     enableIndicator();
   }
 }
 
 browser.runtime.onMessage.addListener((message) => {
+  if (message.type === "get-percent") {
+    return Promise.resolve({
+      percent: getScrollPercentage(),
+    });
+  }
   if (typeof message.popupOpen === "boolean") {
     isPopupOpen = message.popupOpen;
-    if (isPopupOpen) sendPopupStatus();
+    if (isPopupOpen) {
+      return Promise.resolve({
+        percent: getScrollPercentage(),
+        type: "scroll-event",
+      });
+    }
   }
   if (message.type === "settings-update") {
     applyCurrentState();

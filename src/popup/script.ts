@@ -7,25 +7,30 @@ async function renderScrollPercentage() {
     active: true,
     currentWindow: true,
   });
+
   const percentage = document.querySelector(
     "#percentage",
   ) as HTMLSpanElement | null;
-  if (!percentage) return;
-  const { host } = new URL(tab.url ?? "");
+  if (!percentage || !tab?.url || !tab.id) return;
+
+  const { host } = new URL(tab.url);
   const blockedUrls = await getBlockedUrls();
+
   if (blockedUrls.has(host)) {
     percentage.textContent = "N/A";
-  } else {
-    updatePercentage(percentage);
+    return;
   }
-}
 
-async function updatePercentage(percentage: HTMLSpanElement) {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  if (!tab.id) return;
-  const response = await browser.tabs.sendMessage(tab.id, {});
-  if (response?.percent !== undefined) {
-    percentage.textContent = `${response.percent}%`;
+  try {
+    const response = await browser.tabs.sendMessage(tab.id, {type: "get-percent"});
+    if (response?.percent !== undefined) {
+      percentage.textContent = `${response.percent}%`;
+    } else {
+      percentage.textContent = "N/A";
+    }
+  } catch (e) {
+    console.warn("Error while getting current percent: ", e);
+    percentage.textContent = "N/A";
   }
 }
 
@@ -39,22 +44,17 @@ function handlePopupMessaging() {
   });
   browser.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.blockedUrls) {
-      renderScrollPercentage();
+      await renderScrollPercentage();
     }
   });
 
-  browser.runtime.onMessage.addListener((response) => {
-    const { percent, isScrollEvent, type } = response;
-    if (isScrollEvent === true) {
-      const percentage = document.querySelector(
-        "#percentage",
-      ) as HTMLSpanElement | null;
-      if (percentage) {
-        percentage.textContent = `${percent}%`;
-      }
+  browser.runtime.onMessage.addListener(async (response) => {
+    const { type } = response;
+    if (type === "scroll-event") {
+      await renderScrollPercentage();
     }
     if (type === "settings-update") {
-      renderScrollPercentage();
+      await renderScrollPercentage();
     }
   });
 }
@@ -83,7 +83,7 @@ async function handleBlockUrls() {
   blockUrlBtn.classList.toggle("hidden", !host);
   blockUrlBtn.ariaHidden = `${!host}`;
 
-  const blockedUrls = await getBlockedUrls()
+  const blockedUrls = await getBlockedUrls();
   const isUrlBlocked = blockedUrls.has(host);
   toggleBlockedClasses({ isBlocked: isUrlBlocked });
   blockUrlBtn?.addEventListener("click", (ev) => {
