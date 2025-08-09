@@ -15,14 +15,15 @@ async function renderScrollPercentage() {
 
   const { host } = new URL(tab.url);
   const blockedUrls = await getBlockedUrls();
-
   if (blockedUrls.has(host)) {
     percentage.textContent = "N/A";
     return;
   }
 
   try {
-    const response = await browser.tabs.sendMessage(tab.id, {type: "get-percent"});
+    const response = await browser.tabs.sendMessage(tab.id, {
+      type: "get-percent",
+    });
     if (response?.percent !== undefined) {
       percentage.textContent = `${response.percent}%`;
     } else {
@@ -42,9 +43,18 @@ function handlePopupMessaging() {
   window.addEventListener("unload", () => {
     port.postMessage({ type: "popup-closed" });
   });
+
   browser.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.blockedUrls) {
       await renderScrollPercentage();
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      const { host } = new URL(tab.url ?? "");
+      const blockedUrls = await getBlockedUrls();
+      const isBlocked: boolean = blockedUrls.has(host);
+      toggleBlockedClasses({ isBlocked: isBlocked });
     }
   });
 
@@ -59,18 +69,22 @@ function handlePopupMessaging() {
   });
 }
 
+const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
+  const blockUrlBtn = document.querySelector(
+    "#block-url-btn",
+  ) as HTMLButtonElement | null;
+  if (!blockUrlBtn) return;
+  const blockedClasses: Array<string> = [
+    "bg-highlight",
+    "text-muted",
+    "font-light",
+  ];
+  blockedClasses.forEach((className) => {
+    blockUrlBtn.classList.toggle(className, isBlocked);
+  });
+};
+
 async function handleBlockUrls() {
-  const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
-    if (!blockUrlBtn) return;
-    const blockedClasses: Array<string> = [
-      "bg-highlight",
-      "text-muted",
-      "font-light",
-    ];
-    blockedClasses.forEach((className) => {
-      blockUrlBtn.classList.toggle(className, isBlocked);
-    });
-  };
   const blockUrlBtn = document.querySelector(
     "#block-url-btn",
   ) as HTMLButtonElement | null;
@@ -86,10 +100,12 @@ async function handleBlockUrls() {
   const blockedUrls = await getBlockedUrls();
   const isUrlBlocked = blockedUrls.has(host);
   toggleBlockedClasses({ isBlocked: isUrlBlocked });
-  blockUrlBtn?.addEventListener("click", (ev) => {
+
+  blockUrlBtn?.addEventListener("click", async (ev) => {
     const url =
       (ev.currentTarget as HTMLButtonElement).querySelector("#url")
         ?.textContent ?? "";
+    const blockedUrls = await getBlockedUrls();
     const isBlocked: boolean = blockedUrls.has(url);
     toggleBlockedClasses({ isBlocked: !isBlocked });
     if (isBlocked) {
