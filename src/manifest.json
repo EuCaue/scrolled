@@ -2,7 +2,7 @@
   "description": "Displays the current scroll percentage of the active page.",
   "manifest_version": 3,
   "name": "Scrolled",
-  "version": "1.0",
+  "version": "1.1",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
