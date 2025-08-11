@@ -67,6 +67,28 @@ function handlePopupMessaging() {
       await renderScrollPercentage();
     }
   });
+
+  browser.tabs.onActivated.addListener(async () => {
+    const blockUrlBtn = document.querySelector(
+      "#block-url-btn",
+    ) as HTMLButtonElement | null;
+    if (!blockUrlBtn) return;
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (!tab.id) return;
+
+    const url = tab.url ?? "";
+    const { host } = new URL(tab.url ?? "");
+    blockUrlBtn.children[1].textContent = host;
+    blockUrlBtn.classList.toggle("hidden", url.startsWith("about:"));
+    blockUrlBtn.ariaHidden = `${!host}`;
+    const blockedUrls = await getBlockedUrls();
+    const isBlocked: boolean = blockedUrls.has(host);
+    toggleBlockedClasses({ isBlocked: isBlocked });
+    await renderScrollPercentage();
+  });
 }
 
 const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
