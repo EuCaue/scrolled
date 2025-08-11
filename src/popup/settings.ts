@@ -73,15 +73,12 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   const blockedUrlsList = document.querySelector(
     "#blocked-urls-list",
   ) as HTMLUListElement;
-  if (blockedUrlsList.hasChildNodes()) {
-    blockedUrlsList.replaceChildren();
-  }
-  const removeBlockedUrl = async (blockedUrlToRemove: string) => {
-    blockedUrls.delete(blockedUrlToRemove);
-    return blockedUrlToRemove;
-  };
+
+  blockedUrlsList.replaceChildren();
+
   const icon = await fetch(browser.runtime.getURL("/icons/trash.svg"));
   const trashIcon = await icon.text();
+
   blockedUrls.forEach((blockedUrl) => {
     const li = document.createElement<"li">("li");
     li.className =
@@ -96,25 +93,14 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     input.value = blockedUrl;
     input.className = "p-2 text-sm w-full";
 
-    input.addEventListener("change", () => {
-      const newUrl = input.value.trim();
-      if (!newUrl) return;
-
-      if (blockedUrls.has(blockedUrl)) {
-        blockedUrls.delete(blockedUrl);
-      }
-      blockedUrls.add(newUrl);
-    });
-
     const button = document.createElement<"button">("button");
     button.type = "button";
     button.className = "btn font-bold bg-highlight p-1 m-1.5";
     button.id = `remove-btn-${blockedUrl}`;
-    button?.insertAdjacentHTML("afterbegin", trashIcon);
+    button.insertAdjacentHTML("afterbegin", trashIcon);
 
-    button.addEventListener("click", async () => {
-      li.remove();
-      await removeBlockedUrl(blockedUrl);
+    button.addEventListener("click", () => {
+      li.remove(); 
     });
 
     li.appendChild(input);
@@ -123,7 +109,6 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
     blockedUrlsList.appendChild(li);
   });
 }
-
 function showSucessMessage() {
   const success = document.querySelector("#success");
   success?.classList.remove("hidden");
@@ -155,6 +140,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     const backgroundColor = formData.get("background-color") as string;
     const height = Number(formData.get("height") ?? 0);
     const errors: Array<string> = [];
+    blockedUrls.clear();
+    const inputs = document.querySelectorAll<HTMLInputElement>(
+      "#blocked-urls-list input",
+    );
+    inputs.forEach((input) => {
+      const url = input.value.trim();
+      if (url) blockedUrls.add(url);
+    });
     await updateBlockedUrls(blockedUrls);
     if (height < 1 || height > 40) {
       errors.push("Height should be between 1 and 40");
