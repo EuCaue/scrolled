@@ -59,7 +59,17 @@
       <ul
         id="blocked-urls-list"
         class="flex flex-col items-center justify-between bg-surface p-2 rounded gap-3 min-h-[46px]"
-      ></ul>
+      >
+        <label for="add-url" class="sr-only">Add a URL to the block list</label>
+
+        <input
+          type="text"
+          id="add-url"
+          class="mt-2 w-full placeholder:text-muted bg-surface p-2 shadow rounded border border-fg transition-all"
+          placeholder="Enter URL to block"
+          title="Add a URL to the block list"
+        />
+      </ul>
     </form>
     <span
       class="mt-auto font-bold text-xl text-center text-fg bg-highlight hidden rounded shadow-md hover:text-muted px-4 py-2"

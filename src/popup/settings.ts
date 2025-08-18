@@ -69,48 +69,69 @@ async function restoreOptions() {
   });
 }
 
-async function loadBlockedUrls(blockedUrls: Set<string>) {
-  const blockedUrlsList = document.querySelector(
-    "#blocked-urls-list",
-  ) as HTMLUListElement;
-
-  blockedUrlsList.replaceChildren();
-
+async function createBlockedUrlItem({
+  blockedUrl,
+  onDelete,
+}: {
+  blockedUrl: string;
+  onDelete?: CallableFunction;
+}): Promise<HTMLLIElement> {
   const iconResponse = await fetch(browser.runtime.getURL("/icons/trash.svg"));
   const trashIconText = await iconResponse.text();
   const parser = new DOMParser();
   const doc = parser.parseFromString(trashIconText, "image/svg+xml");
-  const trashIcon = doc.documentElement; 
+  const trashIcon = doc.documentElement;
+  const li = document.createElement<"li">("li");
+  li.className =
+    "flex items-center justify-between w-full border rounded border-fg";
 
-  blockedUrls.forEach((blockedUrl) => {
-    const li = document.createElement<"li">("li");
-    li.className =
-      "flex items-center justify-between w-full border rounded border-fg";
+  const input = document.createElement<"input">("input");
+  input.minLength = 2;
+  input.required = true;
+  input.type = "text";
+  input.id = `url-${blockedUrl}`;
+  input.name = `url-${blockedUrl}`;
+  input.value = blockedUrl;
+  input.className = "p-2 text-sm w-full";
 
-    const input = document.createElement<"input">("input");
-    input.minLength = 2;
-    input.required = true;
-    input.type = "text";
-    input.id = `url-${blockedUrl}`;
-    input.name = `url-${blockedUrl}`;
-    input.value = blockedUrl;
-    input.className = "p-2 text-sm w-full";
+  const button = document.createElement<"button">("button");
+  button.type = "button";
+  button.className = "btn font-bold bg-highlight p-1 m-1.5";
+  button.id = `remove-btn-${blockedUrl}`;
+  button.appendChild(trashIcon.cloneNode(true));
 
-    const button = document.createElement<"button">("button");
-    button.type = "button";
-    button.className = "btn font-bold bg-highlight p-1 m-1.5";
-    button.id = `remove-btn-${blockedUrl}`;
-    button.appendChild(trashIcon.cloneNode(true));
-
-    button.addEventListener("click", () => {
-      li.remove();
-    });
-
-    li.appendChild(input);
-    li.appendChild(button);
-
-    blockedUrlsList.appendChild(li);
+  button.addEventListener("click", () => {
+    if (onDelete) {
+      onDelete();
+    }
+    li.remove();
   });
+
+  li.appendChild(input);
+  li.appendChild(button);
+  return li;
+}
+
+async function loadBlockedUrls(blockedUrls: Set<string>) {
+  const blockedUrlsList = document.querySelector(
+    "#blocked-urls-list",
+  ) as HTMLUListElement;
+  const blockUrlInput = blockedUrlsList.querySelector(
+    "#add-url",
+  ) as HTMLInputElement;
+  const labelBlockUrlInput = blockedUrlsList.querySelector(
+    "label",
+  ) as HTMLLabelElement;
+
+  blockedUrlsList.replaceChildren();
+  blockUrlInput.value = "";
+
+  for (const blockedUrl of blockedUrls) {
+    const li = await createBlockedUrlItem({ blockedUrl });
+    blockedUrlsList.appendChild(li);
+  }
+  blockedUrlsList.appendChild(labelBlockUrlInput);
+  blockedUrlsList.appendChild(blockUrlInput);
 }
 function showSucessMessage() {
   const success = document.querySelector("#success");
@@ -125,6 +146,47 @@ window.addEventListener("DOMContentLoaded", async () => {
   await restoreOptions();
   const form: HTMLFormElement = document.querySelector("#settings-form")!;
   const closeBtn: HTMLButtonElement = document.querySelector("#close-btn")!;
+  const blockUrlInput: HTMLInputElement = document.querySelector("#add-url")!;
+
+  blockUrlInput.addEventListener("keydown", async (ev) => {
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      const url = (ev.currentTarget as HTMLInputElement).value.trim();
+      if (url.length <= 2) {
+        showError(form, "URL must be at least 2 characters long.");
+        return;
+      }
+
+      const exists = Array.from(
+        document.querySelectorAll<HTMLInputElement>(
+          "#blocked-urls-list input:not(#add-url)",
+        ),
+      ).some((input) => input.value === url);
+
+      const blockUrlInput = document.querySelector(
+        "#add-url",
+      ) as HTMLInputElement;
+      if (exists) {
+        blockUrlInput.value = "";
+        return;
+      }
+      const blockedUrlsList = document.querySelector(
+        "#blocked-urls-list",
+      ) as HTMLUListElement;
+      const labelBlockUrlInput = blockedUrlsList.querySelector(
+        "label",
+      ) as HTMLLabelElement;
+      blockUrlInput.remove();
+      labelBlockUrlInput.remove();
+      const li = await createBlockedUrlItem({ blockedUrl: url });
+      blockedUrlsList.appendChild(li);
+      blockedUrlsList.appendChild(labelBlockUrlInput);
+      blockedUrlsList.appendChild(blockUrlInput);
+      blockUrlInput.value = "";
+      blockUrlInput.focus();
+    }
+  });
+
   closeBtn.addEventListener("click", async () => {
     const windowID = (await browser.windows.getCurrent())?.id ?? 0;
     browser.windows.remove(windowID);
@@ -145,7 +207,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const errors: Array<string> = [];
     blockedUrls.clear();
     const inputs = document.querySelectorAll<HTMLInputElement>(
-      "#blocked-urls-list input",
+      "#blocked-urls-list input:not(#add-url)",
     );
     inputs.forEach((input) => {
       const url = input.value.trim();
