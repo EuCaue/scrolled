@@ -1,4 +1,9 @@
-import { DEFAULT_OPTIONS, getBlockedUrls, updateBlockedUrls } from "../shared";
+import {
+  DEFAULT_OPTIONS,
+  getBlockedUrls,
+  updateBlockedUrls,
+  normalizeUrl,
+} from "../shared";
 
 const POPUP_TIMEOUT: number = 1850;
 
@@ -76,6 +81,7 @@ async function createBlockedUrlItem({
   blockedUrl: string;
   onDelete?: CallableFunction;
 }): Promise<HTMLLIElement> {
+  blockedUrl = normalizeUrl({url: blockedUrl});
   const iconResponse = await fetch(browser.runtime.getURL("/icons/trash.svg"));
   const trashIconText = await iconResponse.text();
   const parser = new DOMParser();
@@ -91,7 +97,7 @@ async function createBlockedUrlItem({
   input.type = "text";
   input.id = `url-${blockedUrl}`;
   input.name = `url-${blockedUrl}`;
-  input.value = blockedUrl;
+  input.value =  blockedUrl;
   input.className = "p-2 text-sm w-full";
 
   const button = document.createElement<"button">("button");
@@ -151,7 +157,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   blockUrlInput.addEventListener("keydown", async (ev) => {
     if (ev.key === "Enter") {
       ev.preventDefault();
-      const url = (ev.currentTarget as HTMLInputElement).value.trim();
+      const url = normalizeUrl({
+        url: (ev.currentTarget as HTMLInputElement).value.trim(),
+      });
       if (url.length <= 2) {
         showError(form, "URL must be at least 2 characters long.");
         return;
@@ -178,8 +186,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       ) as HTMLLabelElement;
       blockUrlInput.remove();
       labelBlockUrlInput.remove();
-      const li = await createBlockedUrlItem({ blockedUrl: url });
-      blockedUrlsList.appendChild(li);
+      const blockedUrlItem = await createBlockedUrlItem({
+        blockedUrl: url,
+      });
+      blockedUrlsList.appendChild(blockedUrlItem);
       blockedUrlsList.appendChild(labelBlockUrlInput);
       blockedUrlsList.appendChild(blockUrlInput);
       blockUrlInput.value = "";

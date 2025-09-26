@@ -1,4 +1,9 @@
-import { getBlockedUrls, updateBlockedUrls } from "../shared";
+import {
+  getBlockedUrls,
+  updateBlockedUrls,
+  isUrlBlocked,
+  normalizeUrl,
+} from "../shared";
 import "./style.css";
 //  TODO: change storage.local to sync
 
@@ -13,9 +18,7 @@ async function renderScrollPercentage() {
   ) as HTMLSpanElement | null;
   if (!percentage || !tab?.url || !tab.id) return;
 
-  const { host } = new URL(tab.url);
-  const blockedUrls = await getBlockedUrls();
-  if (blockedUrls.has(host)) {
+  if (isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })) {
     percentage.textContent = "N/A";
     return;
   }
@@ -51,9 +54,10 @@ function handlePopupMessaging() {
         active: true,
         currentWindow: true,
       });
-      const { host } = new URL(tab.url ?? "");
-      const blockedUrls = await getBlockedUrls();
-      const isBlocked: boolean = blockedUrls.has(host);
+      const isBlocked: boolean = isUrlBlocked({
+        url: tab.url ?? "",
+        blockedUrls: await getBlockedUrls(),
+      });
       toggleBlockedClasses({ isBlocked: isBlocked });
     }
   });
@@ -80,12 +84,14 @@ function handlePopupMessaging() {
     if (!tab.id) return;
 
     const url = tab.url ?? "";
-    const { host } = new URL(tab.url ?? "");
+    const host = normalizeUrl({ url });
     blockUrlBtn.children[1].textContent = host;
     blockUrlBtn.classList.toggle("hidden", url.startsWith("about:"));
     blockUrlBtn.ariaHidden = `${!host}`;
-    const blockedUrls = await getBlockedUrls();
-    const isBlocked: boolean = blockedUrls.has(host);
+    const isBlocked: boolean = isUrlBlocked({
+      url: tab.url ?? "",
+      blockedUrls: await getBlockedUrls(),
+    });
     toggleBlockedClasses({ isBlocked: isBlocked });
     await renderScrollPercentage();
   });
@@ -114,21 +120,24 @@ async function handleBlockUrls() {
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab.id) return;
 
-  const { host } = new URL(tab.url ?? "");
+  const host = normalizeUrl({ url: tab.url ?? "" });
   blockUrlBtn.children[1].textContent = host;
   blockUrlBtn.classList.toggle("hidden", !host);
   blockUrlBtn.ariaHidden = `${!host}`;
 
-  const blockedUrls = await getBlockedUrls();
-  const isUrlBlocked = blockedUrls.has(host);
-  toggleBlockedClasses({ isBlocked: isUrlBlocked });
+  toggleBlockedClasses({
+    isBlocked: isUrlBlocked({
+      url: tab.url ?? "",
+      blockedUrls: await getBlockedUrls(),
+    }),
+  });
 
   blockUrlBtn?.addEventListener("click", async (ev) => {
     const url =
       (ev.currentTarget as HTMLButtonElement).querySelector("#url")
         ?.textContent ?? "";
     const blockedUrls = await getBlockedUrls();
-    const isBlocked: boolean = blockedUrls.has(url);
+    const isBlocked: boolean = isUrlBlocked({ url, blockedUrls });
     toggleBlockedClasses({ isBlocked: !isBlocked });
     if (isBlocked) {
       blockedUrls.delete(url);
