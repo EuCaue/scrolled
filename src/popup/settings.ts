@@ -24,7 +24,7 @@ function showError(
   msg: string,
   ms: number = POPUP_TIMEOUT,
 ): void {
-  const span = document.createElement("span");
+  const span: HTMLSpanElement = document.createElement("span");
   const cls: Array<string> = [
     "bg-red-400",
     "font-bold",
@@ -37,15 +37,21 @@ function showError(
     "rounded",
     "shadow-sm",
     "hover:shadow-lg",
-    "hover:mb-1",
     "transition-all",
+    "animate-[slide-up_0.4s_ease-in-out]",
   ];
   span.classList.add(...cls);
   span.innerText = msg;
   el.after(span);
 
   setTimeout(() => {
-    span.remove();
+    span.classList.remove("animate-[slide-up_0.4s_ease-in-out]");
+    setTimeout(() => {
+      span.classList.add("animate-[slide-up_0.4s_ease-in-out_reverse]");
+      span.addEventListener("animationend", () => span.remove(), {
+        once: true,
+      });
+    }, 100);
   }, ms);
 }
 
@@ -81,7 +87,7 @@ async function createBlockedUrlItem({
   blockedUrl: string;
   onDelete?: CallableFunction;
 }): Promise<HTMLLIElement> {
-  blockedUrl = normalizeUrl({url: blockedUrl});
+  blockedUrl = normalizeUrl({ url: blockedUrl });
   const iconResponse = await fetch(browser.runtime.getURL("/icons/trash.svg"));
   const trashIconText = await iconResponse.text();
   const parser = new DOMParser();
@@ -89,7 +95,7 @@ async function createBlockedUrlItem({
   const trashIcon = doc.documentElement;
   const li = document.createElement<"li">("li");
   li.className =
-    "flex items-center justify-between w-full border rounded border-fg";
+    "flex items-center justify-between w-full border rounded border-fg animate-[slide-up_0.6s_ease-in-out]";
 
   const input = document.createElement<"input">("input");
   input.minLength = 2;
@@ -97,7 +103,7 @@ async function createBlockedUrlItem({
   input.type = "text";
   input.id = `url-${blockedUrl}`;
   input.name = `url-${blockedUrl}`;
-  input.value =  blockedUrl;
+  input.value = blockedUrl;
   input.className = "p-2 text-sm w-full";
 
   const button = document.createElement<"button">("button");
@@ -110,7 +116,11 @@ async function createBlockedUrlItem({
     if (onDelete) {
       onDelete();
     }
-    li.remove();
+    li.classList.remove("animate-[slide-up_0.6s_ease-in-out]");
+    setTimeout(() => {
+      li.classList.add("animate-[slide-up_0.4s_ease-in-out_reverse]");
+    }, 100);
+    li.addEventListener("animationend", () => li.remove());
   });
 
   li.appendChild(input);
@@ -139,6 +149,7 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   blockedUrlsList.appendChild(labelBlockUrlInput);
   blockedUrlsList.appendChild(blockUrlInput);
 }
+
 function showSucessMessage() {
   const success = document.querySelector("#success");
   success?.classList.remove("hidden");
