@@ -78,6 +78,16 @@ async function restoreOptions() {
     const value = options[key];
     el.value = value as string;
   });
+  const position = document.querySelector<HTMLSelectElement>(
+    "#settings-form select",
+  )!;
+  const positionsOptions: HTMLOptionElement[] = Array.from(position.options);
+  for (const option of positionsOptions) {
+    if (option.value === options.pos) {
+      option.selected = true;
+      break;
+    }
+  }
 }
 
 async function createBlockedUrlItem({
@@ -225,6 +235,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const fillColor = formData.get("fill-color") as string;
     const backgroundColor = formData.get("background-color") as string;
     const height = Number(formData.get("height") ?? 0);
+    const pos = formData.get("pos");
     const errors: Array<string> = [];
     blockedUrls.clear();
     const inputs = document.querySelectorAll<HTMLInputElement>(
@@ -244,7 +255,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       });
       return;
     }
-    saveOptions({ fillColor, backgroundColor, height });
+    saveOptions({ fillColor, backgroundColor, height, pos });
     showSucessMessage();
     browser.runtime.sendMessage({
       type: "settings-update",

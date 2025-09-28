@@ -9,22 +9,56 @@ async function enableIndicator(): Promise<void> {
     Object.keys(DEFAULT_OPTIONS),
   )) as Options;
   if (Object.keys(options).length < 1) {
-    browser.storage.sync.set(DEFAULT_OPTIONS);
+    await browser.storage.sync.set(DEFAULT_OPTIONS);
   }
   //  TODO: improve how to reload the scroll indicator
   disableIndicator();
-  const style = document.createElement("style");
-  style.className = "scroll-indicator-style";
-  style.textContent = `
-    .scroll-indicator { position: fixed; top: 0; left: 0; height: ${options.height}px; width: 100%; background-color: ${options.backgroundColor}; z-index: 9999; pointer-events: none; }
-    .scroll-indicator-bar { height: 100%; width: 0%; background-color: ${options.fillColor}; transition: width 0.2s ease; }
-  `;
-  document.head.appendChild(style);
+
+  if (!document.querySelector(".scroll-indicator-style")) {
+    const style = document.createElement("style");
+    style.className = "scroll-indicator-style";
+    style.textContent = `
+      .scroll-indicator {
+        position: fixed;
+        background-color: ${options.backgroundColor};
+        z-index: 9999;
+        pointer-events: none;
+      }
+      .scroll-indicator-bar {
+        background-color: ${options.fillColor};
+        transition: all 0.2s ease;
+      }
+      /* horizontal */
+      .scroll-indicator.top {
+        top: 0; left: 0; height: ${options.height}px; width: 100%;
+      }
+      .scroll-indicator.bottom {
+        bottom: 0; left: 0; height: ${options.height}px; width: 100%;
+      }
+      .scroll-indicator-bar.horizontal {
+        height: 100%; width: 0%;
+      }
+      /* vertical */
+      .scroll-indicator.left {
+        top: 0; left: 0; width: ${options.height}px; height: 100%;
+      }
+      .scroll-indicator.right {
+        top: 0; right: 0; width: ${options.height}px; height: 100%;
+      }
+      .scroll-indicator-bar.vertical {
+        width: 100%; height: 0%;
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   const wrapper = document.createElement("div");
-  wrapper.className = "scroll-indicator";
+  wrapper.className = "scroll-indicator " + options.pos.toLowerCase();
+
   const bar = document.createElement("div");
-  bar.className = "scroll-indicator-bar";
+  bar.className =
+    "scroll-indicator-bar " +
+    (["TOP", "BOTTOM"].includes(options.pos) ? "horizontal" : "vertical");
   bar.id = "scroll-indicator-bar";
   wrapper.appendChild(bar);
   document.body.appendChild(wrapper);
@@ -46,8 +80,13 @@ function disableIndicator(): void {
 function setScrollPercentage(): void {
   const bar = document.getElementById("scroll-indicator-bar");
   if (!bar) return;
+
   const scrollPercent = getScrollPercentage();
-  bar.style.width = `${scrollPercent}%`;
+  if (bar.classList.contains("horizontal")) {
+    bar.style.width = `${scrollPercent}%`;
+  } else {
+    bar.style.height = `${scrollPercent}%`;
+  }
 }
 
 function getScrollPercentage(): number {
@@ -74,7 +113,6 @@ function scrollHandler(): void {
 
 async function applyCurrentState(): Promise<void> {
   const blockedUrls = await getBlockedUrls();
-
   if (isUrlBlocked({ url: window.location.hostname, blockedUrls })) {
     disableIndicator();
   } else {

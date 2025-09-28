@@ -9,12 +9,14 @@ export type Options = {
   height: number;
   fillColor: string;
   backgroundColor: string;
+  pos: string;
 };
 
 export const DEFAULT_OPTIONS: Options = {
   height: 6,
   fillColor: "#3584e4",
   backgroundColor: isDarkMode ? "#000000" : "#ffffff",
+  pos: "TOP"
 };
 
 export const getBlockedUrls = async (): Promise<Set<string>> => {
@@ -32,10 +34,8 @@ export const updateBlockedUrls = async (
 };
 
 export const normalizeUrl = ({ url }: { url: string }): string => {
-  
   url = ensureProtocol(url);
   const { host } = new URL(url);
-  
 
   const normalizedHost = host.replace(/^www\./, "");
   return normalizedHost;
