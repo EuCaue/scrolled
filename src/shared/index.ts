@@ -16,7 +16,7 @@ export const DEFAULT_OPTIONS: Options = {
   height: 6,
   fillColor: "#3584e4",
   backgroundColor: isDarkMode ? "#000000" : "#ffffff",
-  pos: "TOP"
+  pos: "TOP",
 };
 
 export const getBlockedUrls = async (): Promise<Set<string>> => {
@@ -59,4 +59,17 @@ export const isUrlBlocked = ({
   }
 
   return false;
+};
+
+export const getOptions = async (fields?: Partial<Options>) => {
+  fields = fields ?? {};
+  const stored = await browser.storage.sync.get();
+
+  // If storage is empty, set defaults
+  if (Object.keys(stored).length === 0) {
+    await browser.storage.sync.set(DEFAULT_OPTIONS);
+    return { ...DEFAULT_OPTIONS, ...fields };
+  }
+
+  return { ...DEFAULT_OPTIONS, ...stored, ...fields } as Options;
 };

@@ -3,6 +3,7 @@ import {
   getBlockedUrls,
   updateBlockedUrls,
   normalizeUrl,
+  getOptions,
 } from "../shared";
 
 const POPUP_TIMEOUT: number = 1850;
@@ -64,13 +65,7 @@ async function saveOptions(options: any) {
 }
 
 async function restoreOptions() {
-  const stored = await browser.storage.sync.get(Object.keys(DEFAULT_OPTIONS));
-
-  if (Object.keys(stored).length === 0) {
-    await saveOptions(DEFAULT_OPTIONS);
-  }
-
-  const options = { ...DEFAULT_OPTIONS, ...stored };
+  const options = await getOptions();
   const settingsInputs: NodeListOf<HTMLInputElement> =
     document.querySelectorAll("#settings-form input");
   settingsInputs.forEach((el) => {

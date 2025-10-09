@@ -1,16 +1,10 @@
-import { DEFAULT_OPTIONS, getBlockedUrls, isUrlBlocked } from "../shared";
+import { getBlockedUrls, getOptions, isUrlBlocked } from "../shared";
 import { type Options } from "../shared";
 
 let isPopupOpen: boolean = false;
 
 async function enableIndicator(): Promise<void> {
-  //  TODO: get with default options
-  const options = (await browser.storage.sync.get(
-    Object.keys(DEFAULT_OPTIONS),
-  )) as Options;
-  if (Object.keys(options).length < 1) {
-    await browser.storage.sync.set(DEFAULT_OPTIONS);
-  }
+  const options: Options = await getOptions();
   //  TODO: improve how to reload the scroll indicator
   disableIndicator();
 
@@ -53,7 +47,8 @@ async function enableIndicator(): Promise<void> {
   }
 
   const wrapper = document.createElement("div");
-  wrapper.className = "scroll-indicator " + options.pos.toLowerCase();
+  wrapper.className =
+    "scroll-indicator " + (options.pos.toLowerCase() ?? "TOP");
 
   const bar = document.createElement("div");
   bar.className =
