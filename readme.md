@@ -5,6 +5,7 @@
 # Scrolled
 
 [![Get it on Firefox Add-ons](https://img.shields.io/amo/v/scrolled?label=Install%20on%20Firefox&style=for-the-badge&logo=firefox-browser)](https://addons.mozilla.org/en-US/firefox/addon/scrolled/)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20Me%20a%20Coffee-ff5f5f?logo=kofi&logoColor=white&style=for-the-badge)](https://ko-fi.com/eucaue)
 
 </div>
 
