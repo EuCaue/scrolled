@@ -59,9 +59,7 @@ function showError(
 async function saveOptions(options: any) {
   try {
     await browser.storage.sync.set(options);
-  } catch (error) {
-    console.error("Error while saving options: ", error);
-  }
+  } catch (error) {}
 }
 
 async function restoreOptions() {
@@ -88,8 +86,10 @@ async function restoreOptions() {
 async function createBlockedUrlItem({
   blockedUrl,
   onDelete,
+  blockedUrls,
 }: {
   blockedUrl: string;
+  blockedUrls: Set<string>;
   onDelete?: CallableFunction;
 }): Promise<HTMLLIElement> {
   blockedUrl = normalizeUrl({ url: blockedUrl });
@@ -111,13 +111,42 @@ async function createBlockedUrlItem({
   input.value = blockedUrl;
   input.className = "p-2 text-sm w-full";
 
+  let debounceTimer: NodeJS.Timeout;
+  const DEBOUNCE_DELAY = 500; // 500ms de delay
+
+  input.addEventListener("input", async () => {
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(async () => {
+      const newUrl = normalizeUrl({ url: input.value.trim() });
+      if (newUrl.length <= 2) {
+        const form = document.querySelector("#settings-form") as HTMLElement;
+        showError(form, "URL must be at least 2 characters long.");
+        input.value = blockedUrl;
+        return;
+      }
+      if (blockedUrls.has(newUrl) && newUrl !== blockedUrl) {
+        const form = document.querySelector("#settings-form") as HTMLElement;
+        showError(form, "URL already in the block list.");
+        input.value = blockedUrl;
+        return;
+      }
+      if (newUrl !== blockedUrl) {
+        blockedUrls.delete(blockedUrl);
+        blockedUrls.add(newUrl);
+        await updateBlockedUrls(blockedUrls);
+        blockedUrl = newUrl;
+      }
+    }, DEBOUNCE_DELAY);
+  });
+
   const button = document.createElement<"button">("button");
   button.type = "button";
   button.className = "btn font-bold bg-highlight p-1 m-1.5";
   button.id = `remove-btn-${blockedUrl}`;
   button.appendChild(trashIcon.cloneNode(true));
 
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     if (onDelete) {
       onDelete();
     }
@@ -125,7 +154,11 @@ async function createBlockedUrlItem({
     setTimeout(() => {
       li.classList.add("animate-[slide-up_0.4s_ease-in-out_reverse]");
     }, 100);
-    li.addEventListener("animationend", () => li.remove());
+    li.addEventListener("animationend", async () => {
+      li.remove();
+      blockedUrls.delete(blockedUrl);
+      await updateBlockedUrls(blockedUrls);
+    });
   });
 
   li.appendChild(input);
@@ -145,22 +178,16 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   ) as HTMLLabelElement;
 
   blockedUrlsList.replaceChildren();
-  blockUrlInput.value = "";
+  if (blockUrlInput) {
+    blockUrlInput.value = "";
+  }
 
   for (const blockedUrl of blockedUrls) {
-    const li = await createBlockedUrlItem({ blockedUrl });
+    const li = await createBlockedUrlItem({ blockedUrl, blockedUrls });
     blockedUrlsList.appendChild(li);
   }
   blockedUrlsList.appendChild(labelBlockUrlInput);
   blockedUrlsList.appendChild(blockUrlInput);
-}
-
-function showSucessMessage() {
-  const success = document.querySelector("#success");
-  success?.classList.remove("hidden");
-  setTimeout(() => {
-    success?.classList.add("hidden");
-  }, POPUP_TIMEOUT);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -194,6 +221,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         blockUrlInput.value = "";
         return;
       }
+      blockedUrls.add(url);
       const blockedUrlsList = document.querySelector(
         "#blocked-urls-list",
       ) as HTMLUListElement;
@@ -204,12 +232,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       labelBlockUrlInput.remove();
       const blockedUrlItem = await createBlockedUrlItem({
         blockedUrl: url,
+        blockedUrls,
       });
       blockedUrlsList.appendChild(blockedUrlItem);
       blockedUrlsList.appendChild(labelBlockUrlInput);
       blockedUrlsList.appendChild(blockUrlInput);
       blockUrlInput.value = "";
       blockUrlInput.focus();
+      await updateBlockedUrls(blockedUrls);
     }
   });
 
@@ -224,36 +254,20 @@ window.addEventListener("DOMContentLoaded", async () => {
       await loadBlockedUrls(blockedUrls);
     }
   });
+  document
+    .querySelectorAll("#settings-form ul:first-child input, select")
+    .forEach((el) => {
+      el.addEventListener("input", (ev) => {
+        const value = (ev.target as HTMLInputElement).value;
+        const key = toCamelCase(el.id.split("-"));
+        saveOptions({ [key]: value });
+        browser.runtime.sendMessage({
+          type: "settings-update",
+        });
+      });
+    });
+
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const formData: FormData = new FormData(form);
-    const fillColor = formData.get("fill-color") as string;
-    const backgroundColor = formData.get("background-color") as string;
-    const height = Number(formData.get("height") ?? 0);
-    const pos = formData.get("pos");
-    const errors: Array<string> = [];
-    blockedUrls.clear();
-    const inputs = document.querySelectorAll<HTMLInputElement>(
-      "#blocked-urls-list input:not(#add-url)",
-    );
-    inputs.forEach((input) => {
-      const url = input.value.trim();
-      if (url) blockedUrls.add(url);
-    });
-    await updateBlockedUrls(blockedUrls);
-    if (height < 1 || height > 40) {
-      errors.push("Height should be between 1 and 40");
-    }
-    if (errors.length >= 1) {
-      errors.forEach((error) => {
-        showError(form, error);
-      });
-      return;
-    }
-    saveOptions({ fillColor, backgroundColor, height, pos });
-    showSucessMessage();
-    browser.runtime.sendMessage({
-      type: "settings-update",
-    });
   });
 });
