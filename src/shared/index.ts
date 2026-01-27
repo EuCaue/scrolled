@@ -73,3 +73,19 @@ export const getOptions = async (fields?: Partial<Options>) => {
 
   return { ...DEFAULT_OPTIONS, ...stored, ...fields } as Options;
 };
+
+export const debouncer = <T extends any[]>({
+  cb,
+  delay = 300,
+}: {
+  cb: (...args: T) => void;
+  delay?: number;
+}) => {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return function (this: any, ...args: T) {
+    if (timeout) clearTimeout(timeout);
+    const context = this;
+    timeout = setTimeout(() => cb.apply(context, args), delay);
+  };
+};

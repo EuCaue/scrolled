@@ -4,6 +4,7 @@ import {
   updateBlockedUrls,
   normalizeUrl,
   getOptions,
+  debouncer,
 } from "../shared";
 
 const POPUP_TIMEOUT: number = 1850;
@@ -111,34 +112,33 @@ async function createBlockedUrlItem({
   input.value = blockedUrl;
   input.className = "p-2 text-sm w-full";
 
-  let debounceTimer: NodeJS.Timeout;
-  const DEBOUNCE_DELAY = 500; // 500ms de delay
-
-  input.addEventListener("input", async () => {
-    clearTimeout(debounceTimer);
-
-    debounceTimer = setTimeout(async () => {
-      const newUrl = normalizeUrl({ url: input.value.trim() });
-      if (newUrl.length <= 2) {
-        const form = document.querySelector("#settings-form") as HTMLElement;
-        showError(form, "URL must be at least 2 characters long.");
-        input.value = blockedUrl;
-        return;
-      }
-      if (blockedUrls.has(newUrl) && newUrl !== blockedUrl) {
-        const form = document.querySelector("#settings-form") as HTMLElement;
-        showError(form, "URL already in the block list.");
-        input.value = blockedUrl;
-        return;
-      }
-      if (newUrl !== blockedUrl) {
-        blockedUrls.delete(blockedUrl);
-        blockedUrls.add(newUrl);
-        await updateBlockedUrls(blockedUrls);
-        blockedUrl = newUrl;
-      }
-    }, DEBOUNCE_DELAY);
-  });
+  input.addEventListener(
+    "input",
+    debouncer({
+      cb: async () => {
+        const newUrl = normalizeUrl({ url: input.value.trim() });
+        if (newUrl.length <= 2) {
+          const form = document.querySelector("#settings-form") as HTMLElement;
+          showError(form, "URL must be at least 2 characters long.");
+          input.value = blockedUrl;
+          return;
+        }
+        if (blockedUrls.has(newUrl) && newUrl !== blockedUrl) {
+          const form = document.querySelector("#settings-form") as HTMLElement;
+          showError(form, "URL already in the block list.");
+          input.value = blockedUrl;
+          return;
+        }
+        if (newUrl !== blockedUrl) {
+          blockedUrls.delete(blockedUrl);
+          blockedUrls.add(newUrl);
+          await updateBlockedUrls(blockedUrls);
+          blockedUrl = newUrl;
+        }
+      },
+      delay: 500,
+    }),
+  );
 
   const button = document.createElement<"button">("button");
   button.type = "button";
@@ -257,17 +257,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   document
     .querySelectorAll("#settings-form ul:first-child input, select")
     .forEach((el) => {
-      el.addEventListener("input", (ev) => {
-        const value = (ev.target as HTMLInputElement).value;
-        const key = toCamelCase(el.id.split("-"));
-        saveOptions({ [key]: value });
-        browser.runtime.sendMessage({
-          type: "settings-update",
-        });
+      const debouncedSave = debouncer({
+        cb: () => {
+          const value = (el as HTMLInputElement).value;
+          const key = toCamelCase(el.id.split("-"));
+          saveOptions({ [key]: value });
+          browser.runtime.sendMessage({
+            type: "settings-update",
+          });
+        },
+        delay: 175,
+      });
+      el.addEventListener("input", () => {
+        debouncedSave();
       });
     });
-
-  form.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-  });
 });
