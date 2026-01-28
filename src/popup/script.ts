@@ -17,8 +17,7 @@ async function renderScrollPercentage() {
     "#percentage",
   ) as HTMLSpanElement | null;
   if (!percentage || !tab?.url || !tab.id) return;
-
-  if (isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })) {
+  if (tab.url.startsWith("about") || isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })) {
     percentage.textContent = "N/A";
     return;
   }
@@ -82,7 +81,12 @@ function handlePopupMessaging() {
       currentWindow: true,
     });
     if (!tab.id) return;
-
+    if (tab.url?.startsWith("about")) {
+      blockUrlBtn.classList.toggle("hidden");
+      blockUrlBtn.ariaHidden = "true";
+      renderScrollPercentage()
+      return;
+    }
     const url = tab.url ?? "";
     const host = normalizeUrl({ url });
     blockUrlBtn.children[1].textContent = host;
@@ -119,7 +123,11 @@ async function handleBlockUrls() {
   if (!blockUrlBtn) return;
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab.id) return;
-
+  if (tab.url?.startsWith("about")) {
+    blockUrlBtn.classList.toggle("hidden");
+    blockUrlBtn.ariaHidden = "true";
+    return;
+  }
   const host = normalizeUrl({ url: tab.url ?? "" });
   blockUrlBtn.children[1].textContent = host;
   blockUrlBtn.classList.toggle("hidden", !host);

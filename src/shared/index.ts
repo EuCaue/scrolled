@@ -48,16 +48,21 @@ export const isUrlBlocked = ({
   url: string;
   blockedUrls: Set<string> | Array<string>;
 }): boolean => {
+  if (url.startsWith("about")) {
+    return false;
+  }
   url = ensureProtocol(url);
-
   const { host } = new URL(url);
 
   const normalizedHost = normalizeUrl({ url });
   for (const blocked of blockedUrls) {
-    if (host === blocked || normalizedHost === blocked) return true;
-    if (host === blocked || host.endsWith("." + blocked)) return true;
+    if (
+      host === blocked ||
+      normalizedHost === blocked ||
+      host.endsWith(`.${blocked}`)
+    )
+      return true;
   }
-
   return false;
 };
 

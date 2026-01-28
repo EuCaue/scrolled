@@ -60,7 +60,9 @@ function showError(
 async function saveOptions(options: any) {
   try {
     await browser.storage.sync.set(options);
-  } catch (error) {}
+  } catch (e) {
+    console.log("Error while saving options: ", e);
+  }
 }
 
 async function restoreOptions() {
