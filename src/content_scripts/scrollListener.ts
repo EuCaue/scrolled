@@ -108,7 +108,7 @@ function scrollHandler(): void {
 
 async function applyCurrentState(): Promise<void> {
   const blockedUrls = await getBlockedUrls();
-  if (isUrlBlocked({ url: window.location.hostname, blockedUrls })) {
+  if (isUrlBlocked({ url: window.location.host, blockedUrls })) {
     disableIndicator();
   } else {
     enableIndicator();

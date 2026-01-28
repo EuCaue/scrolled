@@ -52,14 +52,13 @@ export const isUrlBlocked = ({
     return false;
   }
   url = ensureProtocol(url);
-  const { host } = new URL(url);
 
   const normalizedHost = normalizeUrl({ url });
   for (const blocked of blockedUrls) {
     if (
-      host === blocked ||
+      url === blocked ||
       normalizedHost === blocked ||
-      host.endsWith(`.${blocked}`)
+      url.endsWith(`.${blocked}`)
     )
       return true;
   }
