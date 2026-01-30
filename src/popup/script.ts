@@ -7,17 +7,50 @@ import {
 import "./style.css";
 //  TODO: change storage.local to sync
 
-async function renderScrollPercentage() {
-  const [tab] = await browser.tabs.query({
-    active: true,
-    currentWindow: true,
+const getCurrentTab = async () => {
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  return tab;
+};
+
+async function renderBlockUrlButton() {
+  const blockUrlBtn = document.querySelector(
+    "#block-url-btn",
+  ) as HTMLButtonElement | null;
+  if (!blockUrlBtn) return;
+  const tab = await getCurrentTab();
+  if (!tab) return;
+  if (tab.url?.startsWith("about")) {
+    blockUrlBtn.classList.toggle("hidden");
+    blockUrlBtn.ariaHidden = "true";
+    return;
+  }
+  const host = normalizeUrl({ url: tab.url ?? "" });
+  blockUrlBtn.children[1].textContent = host;
+  blockUrlBtn.title = host;
+  blockUrlBtn.ariaLabel = host;
+  blockUrlBtn.classList.toggle("hidden", !!host);
+  blockUrlBtn.ariaHidden = `${!!host}`;
+
+  const isBlocked: boolean = isUrlBlocked({
+    url: tab.url ?? "",
+    blockedUrls: await getBlockedUrls(),
   });
+
+  toggleBlockedClasses({ isBlocked: isBlocked });
+  return blockUrlBtn;
+}
+
+async function renderScrollPercentage() {
+  const tab = await getCurrentTab();
 
   const percentage = document.querySelector(
     "#percentage",
   ) as HTMLSpanElement | null;
   if (!percentage || !tab?.url || !tab.id) return;
-  if (tab.url.startsWith("about") || isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })) {
+  if (
+    tab.url.startsWith("about") ||
+    isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })
+  ) {
     percentage.textContent = "N/A";
     return;
   }
@@ -49,54 +82,29 @@ function handlePopupMessaging() {
   browser.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.blockedUrls) {
       await renderScrollPercentage();
-      const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
+      const tab = await getCurrentTab();
       const isBlocked: boolean = isUrlBlocked({
         url: tab.url ?? "",
         blockedUrls: await getBlockedUrls(),
       });
-      toggleBlockedClasses({ isBlocked: isBlocked });
+      toggleBlockedClasses({ isBlocked });
     }
   });
 
-  browser.runtime.onMessage.addListener(async (response) => {
-    const { type } = response;
-    if (type === "scroll-event") {
-      await renderScrollPercentage();
-    }
-    if (type === "settings-update") {
-      await renderScrollPercentage();
-    }
-  });
+  browser.runtime.onMessage.addListener(
+    async (response: { type: "scroll-event" | "settings-update" }) => {
+      const { type } = response;
+      if (type === "scroll-event") {
+        await renderScrollPercentage();
+      }
+      if (type === "settings-update") {
+        await renderScrollPercentage();
+      }
+    },
+  );
 
   browser.tabs.onActivated.addListener(async () => {
-    const blockUrlBtn = document.querySelector(
-      "#block-url-btn",
-    ) as HTMLButtonElement | null;
-    if (!blockUrlBtn) return;
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (!tab.id) return;
-    if (tab.url?.startsWith("about")) {
-      blockUrlBtn.classList.toggle("hidden");
-      blockUrlBtn.ariaHidden = "true";
-      renderScrollPercentage()
-      return;
-    }
-    const url = tab.url ?? "";
-    const host = normalizeUrl({ url });
-    blockUrlBtn.children[1].textContent = host;
-    blockUrlBtn.classList.toggle("hidden", url.startsWith("about:"));
-    blockUrlBtn.ariaHidden = `${!host}`;
-    const isBlocked: boolean = isUrlBlocked({
-      url: tab.url ?? "",
-      blockedUrls: await getBlockedUrls(),
-    });
-    toggleBlockedClasses({ isBlocked: isBlocked });
+    await renderBlockUrlButton();
     await renderScrollPercentage();
   });
 }
@@ -117,29 +125,7 @@ const toggleBlockedClasses = ({ isBlocked }: { isBlocked: boolean }) => {
 };
 
 async function handleBlockUrls() {
-  const blockUrlBtn = document.querySelector(
-    "#block-url-btn",
-  ) as HTMLButtonElement | null;
-  if (!blockUrlBtn) return;
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  if (!tab.id) return;
-  if (tab.url?.startsWith("about")) {
-    blockUrlBtn.classList.toggle("hidden");
-    blockUrlBtn.ariaHidden = "true";
-    return;
-  }
-  const host = normalizeUrl({ url: tab.url ?? "" });
-  blockUrlBtn.children[1].textContent = host;
-  blockUrlBtn.classList.toggle("hidden", !host);
-  blockUrlBtn.ariaHidden = `${!host}`;
-
-  toggleBlockedClasses({
-    isBlocked: isUrlBlocked({
-      url: tab.url ?? "",
-      blockedUrls: await getBlockedUrls(),
-    }),
-  });
-
+  const blockUrlBtn = await renderBlockUrlButton();
   blockUrlBtn?.addEventListener("click", async (ev) => {
     const url =
       (ev.currentTarget as HTMLButtonElement).querySelector("#url")
@@ -166,7 +152,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   ) as HTMLButtonElement | null;
 
   if (!percentage || !settingsBtn) return;
-  handleBlockUrls();
+
+  await handleBlockUrls();
+  await renderScrollPercentage();
 
   settingsBtn.addEventListener("click", async () => {
     await browser.windows.create({
@@ -177,6 +165,5 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  await renderScrollPercentage();
   console.debug("Popup Loaded.");
 });
