@@ -142,13 +142,13 @@ async function createBlockedUrlItem({
     }),
   );
 
-  const button = document.createElement<"button">("button");
-  button.type = "button";
-  button.className = "btn font-bold bg-highlight p-1 m-1.5";
-  button.id = `remove-btn-${blockedUrl}`;
-  button.appendChild(trashIcon.cloneNode(true));
+  const removeButton = document.createElement<"button">("button");
+  removeButton.type = "button";
+  removeButton.className = "btn font-bold bg-highlight p-1 m-1.5";
+  removeButton.id = `remove-btn-${blockedUrl}`;
+  removeButton.appendChild(trashIcon.cloneNode(true));
 
-  button.addEventListener("click", async () => {
+  removeButton.addEventListener("click", async () => {
     if (onDelete) {
       onDelete();
     }
@@ -164,7 +164,7 @@ async function createBlockedUrlItem({
   });
 
   li.appendChild(input);
-  li.appendChild(button);
+  li.appendChild(removeButton);
   return li;
 }
 
@@ -192,6 +192,73 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   blockedUrlsList.appendChild(blockUrlInput);
 }
 
+async function handleAddBlockedUrl(
+  ev: KeyboardEvent,
+  form: HTMLFormElement,
+  blockedUrls: Set<string>,
+): Promise<void> {
+  const url = normalizeUrl({
+    url: (ev.currentTarget as HTMLInputElement).value.trim(),
+  });
+  if (url.length <= 2) {
+    showError(form, "URL must be at least 2 characters long.");
+    return;
+  }
+
+  const exists = Array.from(
+    document.querySelectorAll<HTMLInputElement>(
+      "#blocked-urls-list input:not(#add-url)",
+    ),
+  ).some((input) => input.value === url);
+
+  const blockUrlInput = document.querySelector("#add-url") as HTMLInputElement;
+  if (exists) {
+    blockUrlInput.value = "";
+    showError(form, "URL already in the block list.");
+    return;
+  }
+  blockedUrls.add(url);
+  const blockedUrlsList = document.querySelector(
+    "#blocked-urls-list",
+  ) as HTMLUListElement;
+  const labelBlockUrlInput = blockedUrlsList.querySelector(
+    "label",
+  ) as HTMLLabelElement;
+  blockUrlInput.remove();
+  labelBlockUrlInput.remove();
+  const blockedUrlItem = await createBlockedUrlItem({
+    blockedUrl: url,
+    blockedUrls,
+  });
+  blockedUrlsList.appendChild(blockedUrlItem);
+  blockedUrlsList.appendChild(labelBlockUrlInput);
+  blockedUrlsList.appendChild(blockUrlInput);
+  blockUrlInput.value = "";
+  blockUrlInput.focus();
+  await updateBlockedUrls(blockedUrls);
+}
+
+async function setupAutoSaveListeners() {
+  document
+    .querySelectorAll("#settings-form ul:first-child input, select")
+    .forEach((el) => {
+      const debouncedSave = debouncer({
+        cb: async () => {
+          const value = (el as HTMLInputElement).value;
+          const key = toCamelCase(el.id.split("-"));
+          await saveOptions({ [key]: value });
+          browser.runtime.sendMessage({
+            type: "settings-update",
+          });
+        },
+        delay: 175,
+      });
+      el.addEventListener("input", () => {
+        debouncedSave();
+      });
+    });
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   const blockedUrls = await getBlockedUrls();
   await restoreOptions();
@@ -202,46 +269,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   blockUrlInput.addEventListener("keydown", async (ev) => {
     if (ev.key === "Enter") {
       ev.preventDefault();
-      const url = normalizeUrl({
-        url: (ev.currentTarget as HTMLInputElement).value.trim(),
-      });
-      if (url.length <= 2) {
-        showError(form, "URL must be at least 2 characters long.");
-        return;
-      }
-
-      const exists = Array.from(
-        document.querySelectorAll<HTMLInputElement>(
-          "#blocked-urls-list input:not(#add-url)",
-        ),
-      ).some((input) => input.value === url);
-
-      const blockUrlInput = document.querySelector(
-        "#add-url",
-      ) as HTMLInputElement;
-      if (exists) {
-        blockUrlInput.value = "";
-        return;
-      }
-      blockedUrls.add(url);
-      const blockedUrlsList = document.querySelector(
-        "#blocked-urls-list",
-      ) as HTMLUListElement;
-      const labelBlockUrlInput = blockedUrlsList.querySelector(
-        "label",
-      ) as HTMLLabelElement;
-      blockUrlInput.remove();
-      labelBlockUrlInput.remove();
-      const blockedUrlItem = await createBlockedUrlItem({
-        blockedUrl: url,
-        blockedUrls,
-      });
-      blockedUrlsList.appendChild(blockedUrlItem);
-      blockedUrlsList.appendChild(labelBlockUrlInput);
-      blockedUrlsList.appendChild(blockUrlInput);
-      blockUrlInput.value = "";
-      blockUrlInput.focus();
-      await updateBlockedUrls(blockedUrls);
+      await handleAddBlockedUrl(ev, form, blockedUrls);
     }
   });
 
@@ -256,22 +284,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       await loadBlockedUrls(blockedUrls);
     }
   });
-  document
-    .querySelectorAll("#settings-form ul:first-child input, select")
-    .forEach((el) => {
-      const debouncedSave = debouncer({
-        cb: () => {
-          const value = (el as HTMLInputElement).value;
-          const key = toCamelCase(el.id.split("-"));
-          saveOptions({ [key]: value });
-          browser.runtime.sendMessage({
-            type: "settings-update",
-          });
-        },
-        delay: 175,
-      });
-      el.addEventListener("input", () => {
-        debouncedSave();
-      });
-    });
+
+  await setupAutoSaveListeners();
 });
