@@ -196,7 +196,6 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
 async function handleAddBlockedUrl(
   ev: KeyboardEvent,
   form: HTMLFormElement,
-  blockedUrls: Set<string>,
 ): Promise<void> {
   const url = normalizeUrl({
     url: (ev.currentTarget as HTMLInputElement).value.trim(),
@@ -218,6 +217,7 @@ async function handleAddBlockedUrl(
     showError(form, "URL already in the block list.");
     return;
   }
+  const blockedUrls = await getBlockedUrls();
   blockedUrls.add(url);
   const blockedUrlsList = document.querySelector(
     "#blocked-urls-list",
@@ -268,7 +268,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   blockUrlInput.addEventListener("keydown", async (ev) => {
     if (ev.key === "Enter") {
       ev.preventDefault();
-      await handleAddBlockedUrl(ev, form, blockedUrls);
+      await handleAddBlockedUrl(ev, form);
     }
   });
 
