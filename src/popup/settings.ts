@@ -144,6 +144,8 @@ async function createBlockedUrlItem({
 
   const removeButton = document.createElement<"button">("button");
   removeButton.type = "button";
+  removeButton.ariaLabel = `Remove ${blockedUrl} from blocked list.`;
+  removeButton.title = `Remove ${blockedUrl} from blocked list.`;
   removeButton.className = "btn font-bold bg-highlight p-1 m-1.5";
   removeButton.id = `remove-btn-${blockedUrl}`;
   removeButton.appendChild(trashIcon.cloneNode(true));
