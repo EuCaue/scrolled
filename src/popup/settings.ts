@@ -205,35 +205,20 @@ async function handleAddBlockedUrl(
     return;
   }
 
-  const exists = Array.from(
-    document.querySelectorAll<HTMLInputElement>(
-      "#blocked-urls-list input:not(#add-url)",
-    ),
-  ).some((input) => input.value === url);
-
-  const blockUrlInput = document.querySelector("#add-url") as HTMLInputElement;
-  if (exists) {
+  const blockedUrls = await getBlockedUrls();
+  if (blockedUrls.has(url)) {
+    const blockUrlInput = document.querySelector(
+      "#add-url",
+    ) as HTMLInputElement;
     blockUrlInput.value = "";
     showError(form, "URL already in the block list.");
     return;
   }
-  const blockedUrls = await getBlockedUrls();
   blockedUrls.add(url);
-  const blockedUrlsList = document.querySelector(
-    "#blocked-urls-list",
-  ) as HTMLUListElement;
-  const labelBlockUrlInput = blockedUrlsList.querySelector(
-    "label",
-  ) as HTMLLabelElement;
-  blockUrlInput.remove();
-  labelBlockUrlInput.remove();
-  const blockedUrlItem = await createBlockedUrlItem({
+  await createBlockedUrlItem({
     blockedUrl: url,
     blockedUrls,
   });
-  blockedUrlsList.appendChild(blockedUrlItem);
-  blockedUrlsList.appendChild(labelBlockUrlInput);
-  blockedUrlsList.appendChild(blockUrlInput);
   await updateBlockedUrls(blockedUrls);
 }
 
