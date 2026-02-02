@@ -182,9 +182,7 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   ) as HTMLLabelElement;
 
   blockedUrlsList.replaceChildren();
-  if (blockUrlInput) {
-    blockUrlInput.value = "";
-  }
+  blockUrlInput.value = "";
 
   for (const blockedUrl of blockedUrls) {
     const li = await createBlockedUrlItem({ blockedUrl, blockedUrls });
@@ -192,6 +190,7 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   }
   blockedUrlsList.appendChild(labelBlockUrlInput);
   blockedUrlsList.appendChild(blockUrlInput);
+  blockUrlInput.focus();
 }
 
 async function handleAddBlockedUrl(
@@ -235,8 +234,6 @@ async function handleAddBlockedUrl(
   blockedUrlsList.appendChild(blockedUrlItem);
   blockedUrlsList.appendChild(labelBlockUrlInput);
   blockedUrlsList.appendChild(blockUrlInput);
-  blockUrlInput.value = "";
-  blockUrlInput.focus();
   await updateBlockedUrls(blockedUrls);
 }
 
