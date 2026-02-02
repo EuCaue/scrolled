@@ -103,7 +103,7 @@ async function createBlockedUrlItem({
   const trashIcon = doc.documentElement;
   const li = document.createElement<"li">("li");
   li.className =
-    "flex items-center justify-between w-full border rounded border-fg animate-[slide-up_0.6s_ease-in-out]";
+    "flex items-center justify-between w-full border rounded border-fg";
 
   const input = document.createElement<"input">("input");
   input.minLength = 2;
