@@ -28,8 +28,8 @@ async function renderBlockUrlButton() {
   blockUrlBtn.children[1].textContent = host;
   blockUrlBtn.title = host;
   blockUrlBtn.ariaLabel = host;
-  blockUrlBtn.classList.toggle("hidden", !!host);
-  blockUrlBtn.ariaHidden = `${!!host}`;
+  blockUrlBtn.classList.toggle("hidden", !host);
+  blockUrlBtn.ariaHidden = `${!host}`;
 
   const isBlocked: boolean = isUrlBlocked({
     url: tab.url ?? "",
@@ -155,6 +155,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await handleBlockUrls();
   await renderScrollPercentage();
+  await renderBlockUrlButton();
 
   settingsBtn.addEventListener("click", async () => {
     await browser.windows.create({
