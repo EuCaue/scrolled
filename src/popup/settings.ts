@@ -174,6 +174,7 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   const blockedUrlsList = document.querySelector(
     "#blocked-urls-list",
   ) as HTMLUListElement;
+
   const blockUrlInput = blockedUrlsList.querySelector(
     "#add-url",
   ) as HTMLInputElement;
@@ -184,12 +185,19 @@ async function loadBlockedUrls(blockedUrls: Set<string>) {
   blockedUrlsList.replaceChildren();
   blockUrlInput.value = "";
 
-  for (const blockedUrl of blockedUrls) {
-    const li = await createBlockedUrlItem({ blockedUrl, blockedUrls });
-    blockedUrlsList.appendChild(li);
-  }
-  blockedUrlsList.appendChild(labelBlockUrlInput);
-  blockedUrlsList.appendChild(blockUrlInput);
+  const fragment = document.createDocumentFragment();
+
+  const items = await Promise.all(
+    Array.from(blockedUrls).map((blockedUrl) =>
+      createBlockedUrlItem({ blockedUrl, blockedUrls }),
+    ),
+  );
+
+  items.forEach((item) => fragment.appendChild(item));
+
+  fragment.appendChild(labelBlockUrlInput);
+  fragment.appendChild(blockUrlInput);
+  blockedUrlsList.appendChild(fragment);
   blockUrlInput.focus();
 }
 
