@@ -108,7 +108,7 @@ function scrollHandler(): void {
 
 async function applyCurrentState(): Promise<void> {
   const blockedUrls = await getBlockedUrls();
-  if (isUrlBlocked({ url: window.location.host, blockedUrls })) {
+  if (await isUrlBlocked({ url: window.location.host, blockedUrls })) {
     disableIndicator();
   } else {
     enableIndicator();
@@ -136,7 +136,7 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 browser.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === "local" && changes.blockedUrls) {
+  if ((areaName === "local" || areaName === "sync") && (changes.blockedUrls || changes.mode)) {
     applyCurrentState();
   }
 });

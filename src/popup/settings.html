@@ -49,8 +49,8 @@
             type="number"
             id="height"
             name="height"
-            value=4
-            max=50
+            value="4"
+            max="50"
             required
             class="w-16 text-center border rounded"
           />
@@ -60,7 +60,12 @@
           class="flex items-center justify-between bg-surface px-4 py-2 rounded"
         >
           <label for="pos">INDICATOR POSITION:</label>
-          <select name="pos" id="pos" required class="w-[10ch] text-center border rounded">
+          <select
+            name="pos"
+            id="pos"
+            required
+            class="w-[10ch] text-center border rounded"
+          >
             <option value="TOP">TOP</option>
             <option value="BOTTOM">BOTTOM</option>
             <option value="LEFT">LEFT</option>
@@ -68,10 +73,25 @@
           </select>
         </li>
       </ul>
-      <h2 class="text-lg font-bold text-center">BLOCKED URLS</h2>
+      <span class="relative flex flex-row justify-center items-center gap-3">
+        <h2 class="text-lg font-bold flex-1 text-center lg:ml-[12%]">
+          BLOCKED URLS
+        </h2>
+
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input type="checkbox" id="mode" name="mode" class="peer sr-only" />
+          <div
+            class="peer h-5 w-10 rounded-full bg-surface peer-checked:bg-highlight after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-fg after:transition-all peer-checked:after:translate-x-5"
+          ></div>
+        </label>
+
+        <span class="text-sm text-muted peer-checked:text-fg" id="mode-status">
+          BLACKLIST
+        </span>
+      </span>
       <ul
         id="blocked-urls-list"
-        class="flex flex-col items-center justify-between bg-surface p-2 rounded gap-3 min-h-[46px]"
+        class="flex flex-col items-center justify-between bg-surface p-2 rounded gap-3 min-h-11.5"
       >
         <label for="add-url" class="sr-only">Add a URL to the block list</label>
 

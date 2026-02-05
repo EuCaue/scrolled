@@ -10,6 +10,7 @@ export type Options = {
   fillColor: string;
   backgroundColor: string;
   pos: string;
+  mode: Mode;
 };
 
 export const DEFAULT_OPTIONS: Options = {
@@ -17,6 +18,7 @@ export const DEFAULT_OPTIONS: Options = {
   fillColor: "#3584e4",
   backgroundColor: isDarkMode ? "#000000" : "#ffffff",
   pos: "TOP",
+  mode: "blacklist"
 };
 
 export const getBlockedUrls = async (): Promise<Set<string>> => {
@@ -41,28 +43,49 @@ export const normalizeUrl = ({ url }: { url: string }): string => {
   return normalizedHost;
 };
 
-export const isUrlBlocked = ({
+/*
+Determines if a URL should be blocked based on the current mode (blacklist or whitelist).
+*/
+export const isUrlBlocked = async ({
   url,
   blockedUrls,
 }: {
   url: string;
   blockedUrls: Set<string> | Array<string>;
-}): boolean => {
+}): Promise<boolean> => {
   if (url.startsWith("about")) {
     return false;
   }
   url = ensureProtocol(url);
 
   const normalizedHost = normalizeUrl({ url });
-  for (const blocked of blockedUrls) {
-    if (
-      url === blocked ||
-      normalizedHost === blocked ||
-      url.endsWith(`.${blocked}`)
-    )
-      return true;
+  const mode = await getMode();
+
+  // Blacklist mode: block URLs that match any entry in blockedUrls
+  if (mode === "blacklist") {
+    for (const blocked of blockedUrls) {
+      if (
+        url === blocked ||
+        normalizedHost === blocked ||
+        url.endsWith(`.${blocked}`)
+      )
+        return true;
+    }
+    return false;
   }
-  return false;
+
+  // Whitelist mode: block URLs that do NOT match any entry in blockedUrls
+  // If a URL matches an entry in the whitelist, it is allowed (not blocked).
+  for (const allowed of blockedUrls) {
+    if (
+      url === allowed ||
+      normalizedHost === allowed ||
+      url.endsWith(`.${allowed}`)
+    ) {
+      return false;
+    }
+  }
+  return true;
 };
 
 export const getOptions = async (fields?: Partial<Options>) => {
@@ -92,4 +115,17 @@ export const debouncer = <T extends any[]>({
     const context = this;
     timeout = setTimeout(() => cb.apply(context, args), delay);
   };
+};
+
+export type Mode = "whitelist" | "blacklist";
+
+export const getMode = async (): Promise<Mode> => {
+  const { mode } = await browser.storage.sync.get({
+    mode: "blacklist",
+  });
+  return mode;
+};
+
+export const updateMode = async (mode: Mode) => {
+  await browser.storage.sync.set({ mode });
 };

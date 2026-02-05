@@ -5,6 +5,8 @@ import {
   normalizeUrl,
   getOptions,
   debouncer,
+  updateMode,
+  getMode,
 } from "../shared";
 
 const POPUP_TIMEOUT: number = 1850;
@@ -61,17 +63,22 @@ async function saveOptions(options: any) {
   try {
     await browser.storage.sync.set(options);
   } catch (e) {
-    console.log("Error while saving options: ", e);
+    console.error("Error while saving options: ", e);
   }
 }
 
 async function restoreOptions() {
   const options = await getOptions();
-  const settingsInputs: NodeListOf<HTMLInputElement> =
-    document.querySelectorAll("#settings-form input");
+  const settingsInputs = document.querySelectorAll<HTMLInputElement>(
+    "#settings-form input:not(#add-url)",
+  );
   settingsInputs.forEach((el) => {
     const key = toCamelCase(el.name.split("-")) as keyof typeof DEFAULT_OPTIONS;
     const value = options[key];
+    if (key === "mode") {
+      el.checked = value === "blacklist";
+      return;
+    }
     el.value = value as string;
   });
   const position = document.querySelector<HTMLSelectElement>(
@@ -251,18 +258,32 @@ async function setupAutoSaveListeners() {
     });
 }
 
+async function handleModeToggle() {
+  const modeSwitch: HTMLInputElement = document.querySelector("#mode")!;
+  const modeStatus: HTMLSpanElement = document.querySelector("#mode-status")!;
+  const checked = modeSwitch.checked;
+  const newMode = checked ? "blacklist" : "whitelist";
+  modeStatus.textContent = newMode.toLocaleUpperCase();
+  await updateMode(newMode);
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   const blockedUrls = await getBlockedUrls();
   await restoreOptions();
   const form: HTMLFormElement = document.querySelector("#settings-form")!;
   const closeBtn: HTMLButtonElement = document.querySelector("#close-btn")!;
   const blockUrlInput: HTMLInputElement = document.querySelector("#add-url")!;
+  const modeSwitch: HTMLButtonElement = document.querySelector("#mode")!;
 
   blockUrlInput.addEventListener("keydown", async (ev) => {
     if (ev.key === "Enter") {
       ev.preventDefault();
       await handleAddBlockedUrl(ev, form);
     }
+  });
+
+  modeSwitch.addEventListener("change", async () => {
+    await handleModeToggle();
   });
 
   closeBtn.addEventListener("click", async () => {

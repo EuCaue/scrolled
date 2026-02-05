@@ -3,6 +3,7 @@ import {
   updateBlockedUrls,
   isUrlBlocked,
   normalizeUrl,
+  getMode,
 } from "../shared";
 import "./style.css";
 //  TODO: change storage.local to sync
@@ -31,7 +32,7 @@ async function renderBlockUrlButton() {
   blockUrlBtn.classList.toggle("hidden", !host);
   blockUrlBtn.ariaHidden = `${!host}`;
 
-  const isBlocked: boolean = isUrlBlocked({
+  const isBlocked: boolean = await isUrlBlocked({
     url: tab.url ?? "",
     blockedUrls: await getBlockedUrls(),
   });
@@ -49,7 +50,7 @@ async function renderScrollPercentage() {
   if (!percentage || !tab?.url || !tab.id) return;
   if (
     tab.url.startsWith("about") ||
-    isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() })
+    (await isUrlBlocked({ url: tab.url, blockedUrls: await getBlockedUrls() }))
   ) {
     percentage.textContent = "N/A";
     return;
@@ -83,7 +84,7 @@ function handlePopupMessaging() {
     if (areaName === "local" && changes.blockedUrls) {
       await renderScrollPercentage();
       const tab = await getCurrentTab();
-      const isBlocked: boolean = isUrlBlocked({
+      const isBlocked: boolean = await isUrlBlocked({
         url: tab.url ?? "",
         blockedUrls: await getBlockedUrls(),
       });
@@ -131,14 +132,18 @@ async function handleBlockUrls() {
       (ev.currentTarget as HTMLButtonElement).querySelector("#url")
         ?.textContent ?? "";
     const blockedUrls = await getBlockedUrls();
-    const isBlocked: boolean = isUrlBlocked({ url, blockedUrls });
+    const mode = await getMode();
+    const isBlocked: boolean = await isUrlBlocked({ url, blockedUrls });
     toggleBlockedClasses({ isBlocked: !isBlocked });
-    if (isBlocked) {
-      blockedUrls.delete(url);
-    } else {
-      blockedUrls.add(url);
+    if (mode === "blacklist") {
+      isBlocked ? blockedUrls.delete(url) : blockedUrls.add(url);
     }
-    updateBlockedUrls(blockedUrls);
+    if (mode === "whitelist") {
+      isBlocked ? blockedUrls.add(url) : blockedUrls.delete(url);
+    }
+    await updateBlockedUrls(blockedUrls);
+    await renderBlockUrlButton();
+    await renderScrollPercentage();
   });
 }
 
