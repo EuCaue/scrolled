@@ -15,13 +15,10 @@ export default [
     },
     plugins: [
       resolve(),
-      typescript({
-        tsconfig: "./tsconfig.json",
-      }),
+      typescript({ tsconfig: "./tsconfig.json" }),
     ],
     treeshake: true,
   },
-
   {
     input: "src/background_scripts/background.ts",
     output: {
@@ -30,10 +27,12 @@ export default [
       entryFileNames: "background.js",
       sourcemap: false,
     },
-    plugins: [resolve(), typescript({ tsconfig: "./tsconfig.json" })],
+    plugins: [
+      resolve(),
+      typescript({ tsconfig: "./tsconfig.json" }),
+    ],
     treeshake: true,
   },
-
   {
     input: "src/popup/script.ts",
     output: {
@@ -54,7 +53,6 @@ export default [
     ],
     treeshake: true,
   },
-
   {
     input: "src/popup/settings.ts",
     output: {
